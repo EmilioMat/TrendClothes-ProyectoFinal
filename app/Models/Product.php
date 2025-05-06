@@ -5,7 +5,17 @@ use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model
 {
-    protected $fillable = ['name', 'description', 'price', 'stock', 'category_id', 'size_id'];
+    protected $fillable = [
+        'name', 
+        'description', 
+        'price', 
+        'stock', 
+        'category_id', 
+        'size_id', 
+        'gender', 
+        'main_image', 
+        'images'
+    ];
 
     // Relaciones
     public function category()
@@ -28,9 +38,13 @@ class Product extends Model
         return $this->hasMany(OrderItem::class);
     }
 
-    // Relación muchos a muchos con Promotion
     public function promotions()
     {
         return $this->belongsToMany(Promotion::class, 'product_promotion', 'product_id', 'promotion_id');
+    }
+
+    public function images()
+    {
+        return $this->hasMany(ProductImage::class);
     }
 }

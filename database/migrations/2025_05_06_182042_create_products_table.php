@@ -15,6 +15,9 @@ class CreateProductsTable extends Migration
             $table->integer('stock');
             $table->foreignId('category_id')->constrained()->onDelete('cascade');
             $table->foreignId('size_id')->constrained()->onDelete('cascade');
+            $table->enum('gender', ['male', 'female', 'unisex'])->default('unisex');
+            $table->string('main_image')->nullable(); 
+            $table->json('images')->nullable(); 
             $table->timestamps();
         });
     }

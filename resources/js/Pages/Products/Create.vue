@@ -8,7 +8,7 @@
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6">
-                        <form @submit.prevent="submit">
+                        <form @submit.prevent="submit" enctype="multipart/form-data">
                             <div class="mb-4">
                                 <label class="block text-gray-700">Name</label>
                                 <input v-model="form.name" type="text" class="w-full border-gray-300 rounded-md" required />
@@ -44,6 +44,26 @@
                                 </select>
                                 <div v-if="form.errors.size_id" class="text-red-500 text-sm mt-1">{{ form.errors.size_id }}</div>
                             </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700">Gender</label>
+                                <select v-model="form.gender" class="w-full border-gray-300 rounded-md" required>
+                                    <option value="">Select gender</option>
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                    <option value="unisex">Unisex</option>
+                                </select>
+                                <div v-if="form.errors.gender" class="text-red-500 text-sm mt-1">{{ form.errors.gender }}</div>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700">Main Image</label>
+                                <input type="file" @change="form.main_image = $event.target.files[0]" class="w-full border-gray-300 rounded-md" />
+                                <div v-if="form.errors.main_image" class="text-red-500 text-sm mt-1">{{ form.errors.main_image }}</div>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700">Additional Images</label>
+                                <input type="file" multiple @change="form.images = $event.target.files" class="w-full border-gray-300 rounded-md" />
+                                <div v-if="form.errors.images" class="text-red-500 text-sm mt-1">{{ form.errors.images }}</div>
+                            </div>
                             <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">Create Product</button>
                         </form>
                     </div>
@@ -69,11 +89,15 @@ const form = useForm({
     stock: 0,
     category_id: '',
     size_id: '',
+    gender: '',
+    main_image: null,
+    images: [],
 });
 
 function submit() {
     form.post(route('admin.products.store'), {
         onSuccess: () => form.reset(),
+        forceFormData: true,
     });
 }
 </script>
