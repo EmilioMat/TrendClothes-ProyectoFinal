@@ -27,4 +27,10 @@ class Product extends Model
     {
         return $this->hasMany(OrderItem::class);
     }
+
+    // Relación muchos a muchos con Promotion
+    public function promotions()
+    {
+        return $this->belongsToMany(Promotion::class, 'product_promotion', 'product_id', 'promotion_id');
+    }
 }

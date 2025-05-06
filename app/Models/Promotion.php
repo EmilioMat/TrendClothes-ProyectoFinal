@@ -7,10 +7,9 @@ class Promotion extends Model
 {
     protected $fillable = ['name', 'discount_percentage', 'start_date', 'end_date'];
 
-    // Relaciones
-    // Nota: No definimos relaciones directas por ahora, pero podrías añadir una relación con productos si las promociones se aplican a productos específicos.
+    // Relación muchos a muchos con Product
     public function products()
     {
-        return $this->belongsToMany(Product::class, 'product_promotion'); // Relación muchos a muchos (requiere tabla pivote).
+        return $this->belongsToMany(Product::class, 'product_promotion', 'promotion_id', 'product_id');
     }
 }
