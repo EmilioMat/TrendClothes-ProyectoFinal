@@ -72,7 +72,7 @@ const form = useForm({
 });
 
 function submit() {
-    form.post(route('products.store'), {
+    form.post(route('admin.products.store'), {
         onSuccess: () => form.reset(),
     });
 }
