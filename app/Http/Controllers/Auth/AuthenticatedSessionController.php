@@ -33,7 +33,11 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        // Reemplaza esta línea:
+        // return redirect()->intended(route('dashboard', absolute: false));
+        
+        // Por esta:
+        return redirect()->route('home')->with('success', '¡Bienvenido de nuevo, ' . Auth::user()->name . '!');
     }
 
     /**
@@ -49,4 +53,10 @@ class AuthenticatedSessionController extends Controller
 
         return redirect('/');
     }
+
+    // Puedes eliminar este método ya que no se está usando
+    // protected function authenticated(Request $request, $user)
+    // {
+    //     return redirect()->route('home')->with('success', '¡Bienvenido de nuevo, ' . $user->name . '!');
+    // }
 }

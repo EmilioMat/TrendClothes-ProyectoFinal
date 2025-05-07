@@ -57,6 +57,8 @@ class User extends Authenticatable
     {
         return $this->hasMany(Review::class);
     }
+    // Añade esto para acceder a is_admin como atributo
+    protected $appends = ['is_admin'];
 
     public function getIsAdminAttribute()
     {
