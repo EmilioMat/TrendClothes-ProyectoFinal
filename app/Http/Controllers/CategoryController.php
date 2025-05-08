@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Category;
@@ -6,22 +7,44 @@ use Inertia\Inertia;
 
 class CategoryController extends Controller
 {
-    // Mostrar todas las categorías
     public function index()
     {
-        $categories = Category::all();
+        $categories = Category::withCount('products')->get();
         return Inertia::render('Categories/Index', [
-            'categories' => $categories
+            'categories' => $categories->map(function ($category) {
+                return [
+                    'id' => $category->id,
+                    'name' => $category->name,
+                    'description' => $category->description,
+                    'products_count' => $category->products_count,
+                ];
+            })
         ]);
     }
 
-    // Mostrar productos de una categoría específica
     public function show(Category $category)
     {
-        $category->load('products'); // Cargar los productos relacionados
+        $category->load(['products' => function($query) {
+            $query->select('id', 'name', 'description', 'price', 'category_id')
+                  ->where('stock', '>', 0)
+                  ->orderBy('created_at', 'desc');
+        }]);
+
         return Inertia::render('Categories/Show', [
-            'category' => $category
+            'category' => [
+                'id' => $category->id,
+                'name' => $category->name,
+                'description' => $category->description,
+                'products' => $category->products->map(function($product) {
+                    return [
+                        'id' => $product->id,
+                        'name' => $product->name,
+                        'description' => $product->description,
+                        'price' => $product->price / 100, // Asumiendo que guardas precios en centimos
+                        'image_url' => $product->image_url,
+                    ];
+                })
+            ]
         ]);
     }
 }
-

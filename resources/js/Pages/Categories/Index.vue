@@ -1,5 +1,5 @@
 <template>
-  <AuthenticatedLayout>
+  <AppLayout>
     <template #header>
       <h2 class="text-xl font-bold">Categorías</h2>
     </template>
@@ -8,18 +8,29 @@
       <div
         v-for="category in categories"
         :key="category.id"
-        class="p-4 bg-white shadow hover:shadow-md rounded"
+        class="p-4 bg-white shadow hover:shadow-md rounded-lg transition-shadow"
       >
         <h3 class="text-lg font-semibold">{{ category.name }}</h3>
         <p class="text-gray-600">{{ category.description }}</p>
-        <a :href="route('categories.show', category.id)" class="text-blue-500 underline mt-2 inline-block">
+        <Link 
+          :href="route('categories.show', { category: category.id })" 
+          class="text-blue-500 hover:text-blue-700 underline mt-2 inline-block"
+        >
           Ver productos
-        </a>
+        </Link>
       </div>
     </div>
-  </AuthenticatedLayout>
+  </AppLayout>
 </template>
 
 <script setup>
-defineProps({ categories: Array });
+import AppLayout from '@/Layouts/AppLayout.vue';
+import { Link } from '@inertiajs/vue3';
+
+defineProps({ 
+  categories: {
+    type: Array,
+    required: true
+  }
+});
 </script>
