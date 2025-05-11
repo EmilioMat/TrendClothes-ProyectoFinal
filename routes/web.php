@@ -7,19 +7,16 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-
 Route::get('/', function () {
     return Inertia::render('Home', [
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
-        // Asegúrate de incluir flash si es necesario
         'flash' => session()->only(['success', 'error']),
     ]);
 })->name('home');
 
-// Elimina o modifica la ruta del dashboard para que redirija siempre al home
 Route::get('/dashboard', function () {
     return redirect()->route('home');
 })->name('dashboard');
@@ -28,9 +25,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-        // ... otras rutas ...
-        Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
-        Route::get('/categories/{category}', [CategoryController::class, 'show'])->name('categories.show');
+    Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
+    Route::get('/categories/{category:slug}', [CategoryController::class, 'show'])->name('categories.show');
 });
 
 Route::middleware(['auth', 'admin'])->group(function () {

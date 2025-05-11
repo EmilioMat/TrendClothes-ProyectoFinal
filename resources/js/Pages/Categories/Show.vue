@@ -1,32 +1,52 @@
 <template>
   <AppLayout>
-    <template #header>
-      <h2 class="text-xl font-bold">Productos en {{ category.name }}</h2>
-    </template>
+    <div class="bg-gray-50 py-8">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="mb-8">
+          <h1 class="text-3xl font-bold text-gray-900">{{ category.name }}</h1>
+          <p class="mt-2 text-lg text-gray-600">{{ category.description }}</p>
+        </div>
 
-    <div class="p-6">
-      <p class="text-gray-700 mb-4">{{ category.description }}</p>
-
-      <div v-if="category.products.length > 0" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        <div
-          v-for="product in category.products"
-          :key="product.id"
-          class="p-4 bg-white rounded-lg shadow hover:shadow-md transition-shadow"
-        >
-          <h3 class="font-semibold text-lg">{{ product.name }}</h3>
-          <p class="text-gray-600 mt-2">{{ product.description }}</p>
-          <p class="font-bold mt-2 text-indigo-600">{{ formatPrice(product.price) }}</p>
-          <Link 
-            :href="route('products.show', { product: product.id })" 
-            class="mt-3 inline-block text-sm text-indigo-500 hover:text-indigo-700"
+        <div v-if="category.products.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div
+            v-for="product in category.products"
+            :key="product.id"
+            class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
           >
-            Ver detalles
+            <div class="h-48 bg-gray-200 flex items-center justify-center">
+              <img 
+                v-if="product.image" 
+                :src="product.image" 
+                :alt="product.name"
+                class="h-full w-full object-cover"
+              >
+              <div v-else class="text-gray-500">Sin imagen</div>
+            </div>
+            <div class="p-6">
+              <h3 class="text-lg font-semibold text-gray-900">{{ product.name }}</h3>
+              <p class="mt-2 text-gray-600 line-clamp-2">{{ product.description }}</p>
+              <div class="mt-4 flex items-center justify-between">
+                <span class="text-xl font-bold text-indigo-600">{{ formatPrice(product.price) }}</span>
+                <Link 
+                  :href="route('products.show', product.id)" 
+                  class="text-sm font-medium text-indigo-600 hover:text-indigo-800"
+                >
+                  Ver detalles
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div v-else class="text-center py-12">
+          <p class="text-gray-500 text-lg">Actualmente no hay productos en esta categoría.</p>
+          <Link 
+            :href="route('categories.index')" 
+            class="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
+          >
+            Ver todas las categorías
           </Link>
         </div>
-      </div>
-
-      <div v-else class="text-gray-500 text-center py-8">
-        No hay productos en esta categoría.
       </div>
     </div>
   </AppLayout>
@@ -43,7 +63,7 @@ const formatPrice = (price) => {
   }).format(price);
 };
 
-defineProps({ 
+defineProps({
   category: {
     type: Object,
     required: true
