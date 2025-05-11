@@ -17,20 +17,21 @@
                             <div class="mb-4">
                                 <label class="block text-gray-700">Description</label>
                                 <textarea v-model="form.description" class="w-full border-gray-300 rounded-md"></textarea>
+                                <div v-if="form.errors.description" class="text-red-500 text-sm mt-1">{{ form.errors.description }}</div>
                             </div>
                             <div class="mb-4">
                                 <label class="block text-gray-700">Price</label>
-                                <input v-model="form.price" type="number" step="0.01" class="w-full border-gray-300 rounded-md" required />
+                                <input v-model.number="form.price" type="number" step="0.01" class="w-full border-gray-300 rounded-md" required />
                                 <div v-if="form.errors.price" class="text-red-500 text-sm mt-1">{{ form.errors.price }}</div>
                             </div>
                             <div class="mb-4">
                                 <label class="block text-gray-700">Stock</label>
-                                <input v-model="form.stock" type="number" class="w-full border-gray-300 rounded-md" required />
+                                <input v-model.number="form.stock" type="number" class="w-full border-gray-300 rounded-md" required />
                                 <div v-if="form.errors.stock" class="text-red-500 text-sm mt-1">{{ form.errors.stock }}</div>
                             </div>
                             <div class="mb-4">
                                 <label class="block text-gray-700">Category</label>
-                                <select v-model="form.category_id" class="w-full border-gray-300 rounded-md" required>
+                                <select v-model.number="form.category_id" class="w-full border-gray-300 rounded-md" required>
                                     <option value="">Select a category</option>
                                     <option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option>
                                 </select>
@@ -38,7 +39,7 @@
                             </div>
                             <div class="mb-4">
                                 <label class="block text-gray-700">Size</label>
-                                <select v-model="form.size_id" class="w-full border-gray-300 rounded-md" required>
+                                <select v-model.number="form.size_id" class="w-full border-gray-300 rounded-md" required>
                                     <option value="">Select a size</option>
                                     <option v-for="size in sizes" :key="size.id" :value="size.id">{{ size.name }}</option>
                                 </select>
@@ -85,10 +86,10 @@ defineProps({
 const form = useForm({
     name: '',
     description: '',
-    price: 0,
-    stock: 0,
-    category_id: '',
-    size_id: '',
+    price: null,
+    stock: null,
+    category_id: null,
+    size_id: null,
     gender: '',
     main_image: null,
     images: [],

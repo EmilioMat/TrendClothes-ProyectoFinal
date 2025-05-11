@@ -53,17 +53,32 @@ class Product extends Model
         return $this->hasMany(ProductImage::class);
     }
 
-
     public static function boot()
     {
         parent::boot();
 
         static::creating(function ($product) {
-            $product->slug = Str::slug($product->name);
+            $slug = Str::slug($product->name);
+            $originalSlug = $slug;
+            $count = 1;
+
+            // Check for duplicate slugs and append a counter
+            while (self::where('slug', $slug)->exists()) {
+                $slug = "{$originalSlug}-" . $count++;
+            }
+            $product->slug = $slug;
         });
 
         static::updating(function ($product) {
-            $product->slug = Str::slug($product->name);
+            $slug = Str::slug($product->name);
+            $originalSlug = $slug;
+            $count = 1;
+
+            // Check for duplicate slugs and append a counter, excluding the current product
+            while (self::where('slug', $slug)->where('id', '!=', $product->id)->exists()) {
+                $slug = "{$originalSlug}-" . $count++;
+            }
+            $product->slug = $slug;
         });
     }
 
