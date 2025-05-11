@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Category;
@@ -63,6 +64,59 @@ class ProductController extends Controller
             }
         }
 
-        return redirect()->route('dashboard')->with('success', 'Product created successfully.');
+        return redirect()->route('dashboard')->with('success', 'Producto creado exitosamente.');
+    }
+
+     public function index()
+    {
+        $products = Product::with(['category', 'images'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return Inertia::render('Products/Index', [
+            'products' => $products->map(function ($product) {
+                return [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'slug' => $product->slug,
+                    'description' => $product->description,
+                    'price' => $product->price / 100,
+                    'stock' => $product->stock,
+                    'gender' => $product->gender,
+                    'main_image' => $product->images->where('is_main', true)->first()?->image_path 
+                        ? asset('storage/'.$product->images->where('is_main', true)->first()->image_path) 
+                        : null,
+                    'images' => $product->images->where('is_main', false)->map(function ($image) {
+                        return asset('storage/'.$image->image_path);
+                    }),
+                    'category' => $product->category->name,
+                ];
+            })
+        ]);
+    }
+
+    public function show(Product $product)
+    {
+        $product->load(['category', 'size', 'images']);
+
+        return Inertia::render('Products/Show', [
+            'product' => [
+                'id' => $product->id,
+                'name' => $product->name,
+                'slug' => $product->slug,
+                'description' => $product->description,
+                'price' => $product->price / 100,
+                'stock' => $product->stock,
+                'gender' => $product->gender,
+                'size' => $product->size->name,
+                'category' => $product->category->name,
+                'main_image' => $product->images->where('is_main', true)->first()?->image_path 
+                    ? asset('storage/'.$product->images->where('is_main', true)->first()->image_path) 
+                    : null,
+                'images' => $product->images->where('is_main', false)->map(function ($image) {
+                    return asset('storage/'.$image->image_path);
+                }),
+            ]
+        ]);
     }
 }
