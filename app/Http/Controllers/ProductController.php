@@ -31,6 +31,8 @@ class ProductController extends Controller
             'category_id' => 'required|exists:categories,id',
             'size_id' => 'required|exists:sizes,id',
             'gender' => 'required|in:male,female,unisex',
+            'color' => 'nullable|string|max:255',
+            'brand' => 'nullable|string|max:255',
             'main_image' => 'nullable|image|max:2048',
             'images' => 'nullable|array',
             'images.*' => 'image|max:2048',
@@ -42,7 +44,7 @@ class ProductController extends Controller
         // Handle main_image
         if ($request->hasFile('main_image')) {
             $mainImagePath = $request->file('main_image')->store('product_images', 'public');
-            $productData['main_image'] = $mainImagePath; // Store the path
+            $productData['main_image'] = $mainImagePath;
         } else {
             $productData['main_image'] = null;
         }
@@ -52,10 +54,10 @@ class ProductController extends Controller
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $image) {
                 $imagePath = $image->store('product_images', 'public');
-                $additionalImages[] = $imagePath; // Collect paths in an array
+                $additionalImages[] = $imagePath;
             }
         }
-        $productData['images'] = json_encode($additionalImages); // Encode as JSON
+        $productData['images'] = json_encode($additionalImages);
 
         // Create the product
         $product = Product::create($productData);

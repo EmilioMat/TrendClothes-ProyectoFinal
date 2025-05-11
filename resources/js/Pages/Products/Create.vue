@@ -56,6 +56,16 @@
                                 <div v-if="form.errors.gender" class="text-red-500 text-sm mt-1">{{ form.errors.gender }}</div>
                             </div>
                             <div class="mb-4">
+                                <label class="block text-gray-700">Color</label>
+                                <input v-model="form.color" type="text" class="w-full border-gray-300 rounded-md" placeholder="e.g., Black, Blue" />
+                                <div v-if="form.errors.color" class="text-red-500 text-sm mt-1">{{ form.errors.color }}</div>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700">Brand</label>
+                                <input v-model="form.brand" type="text" class="w-full border-gray-300 rounded-md" placeholder="e.g., Nike, Adidas" />
+                                <div v-if="form.errors.brand" class="text-red-500 text-sm mt-1">{{ form.errors.brand }}</div>
+                            </div>
+                            <div class="mb-4">
                                 <label class="block text-gray-700">Main Image</label>
                                 <input type="file" @change="form.main_image = $event.target.files[0]" class="w-full border-gray-300 rounded-md" />
                                 <div v-if="form.errors.main_image" class="text-red-500 text-sm mt-1">{{ form.errors.main_image }}</div>
@@ -91,6 +101,8 @@ const form = useForm({
     category_id: null,
     size_id: null,
     gender: '',
+    color: '', 
+    brand: '',
     main_image: null,
     images: [],
 });

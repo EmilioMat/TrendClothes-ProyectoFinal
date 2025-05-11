@@ -18,6 +18,8 @@ class Product extends Model
         'category_id',
         'size_id',
         'gender',
+        'color', 
+        'brand', 
         'main_image',
         'images'
     ];
@@ -62,7 +64,6 @@ class Product extends Model
             $originalSlug = $slug;
             $count = 1;
 
-            // Check for duplicate slugs and append a counter
             while (self::where('slug', $slug)->exists()) {
                 $slug = "{$originalSlug}-" . $count++;
             }
@@ -74,7 +75,6 @@ class Product extends Model
             $originalSlug = $slug;
             $count = 1;
 
-            // Check for duplicate slugs and append a counter, excluding the current product
             while (self::where('slug', $slug)->where('id', '!=', $product->id)->exists()) {
                 $slug = "{$originalSlug}-" . $count++;
             }
