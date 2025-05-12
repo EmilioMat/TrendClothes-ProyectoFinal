@@ -79,7 +79,7 @@ const showingNavigationDropdown = ref(false);
                                             v-if="
                                                 $page.props.auth.user.is_admin
                                             "
-                                            :href="route('admin.panel')"
+                                            :href="route('admin.dashboard')"
                                         >
                                             Panel de Administración
                                         </DropdownLink>

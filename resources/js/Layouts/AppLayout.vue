@@ -64,7 +64,7 @@
                 </template>
                 <template #content>
                   <DropdownLink :href="route('profile.edit')">Perfil</DropdownLink>
-                  <DropdownLink v-if="$page.props.auth.user.is_admin" :href="route('admin.panel')">
+                  <DropdownLink v-if="$page.props.auth.user.is_admin" :href="route('admin.dashboard')">
                     Panel de Administración
                   </DropdownLink>
                   <DropdownLink :href="route('logout')" method="post" as="button">

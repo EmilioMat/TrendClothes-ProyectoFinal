@@ -9,9 +9,12 @@ class EnsureIsAdmin
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if ($request->user()->role !== 'admin') {
+        $user = $request->user();
+        
+        if (!$user || ($user->role !== 'admin' && !$user->isAdmin)) {
             abort(403, 'Unauthorized action.');
         }
+        
         return $next($request);
     }
 }

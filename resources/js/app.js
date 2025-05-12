@@ -24,10 +24,6 @@ createInertiaApp({
             .use(plugin)
             .use(ZiggyVue)
             .use(pinia)
-            .use(toast, {
-                autoClose: 3000,
-                position: 'top-right'
-            });
 
         return vueApp.mount(el);
     },

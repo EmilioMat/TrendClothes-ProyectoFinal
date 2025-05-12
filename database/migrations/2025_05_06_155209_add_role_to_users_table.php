@@ -9,13 +9,16 @@ return new class extends Migration
     public function up()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('role')->default('client'); // 'client' or 'admin'
+            $table->string('role')->default('client'); // 'client' o 'admin'
+            $table->boolean('isAdmin')->default(false); // Añade esto para compatibilidad
         });
     }
+
     public function down()
     {
         Schema::table('users', function (Blueprint $table) {
             $table->dropColumn('role');
+            $table->dropColumn('isAdmin');
         });
     }
 };
