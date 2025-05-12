@@ -65,52 +65,77 @@ class ProductController extends Controller
         return redirect()->route('dashboard')->with('success', 'Producto creado exitosamente.');
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::with(['category'])
-            ->orderBy('created_at', 'desc')
-            ->get();
-
+        $query = Product::query();
+        
+        // Filtro por género
+        if ($request->has('genders') && !empty($request->genders)) {
+            $query->whereIn('gender', explode(',', $request->genders));
+        }
+        
+        // Filtro por categoría
+        if ($request->has('categories') && !empty($request->categories)) {
+            $query->whereIn('category', explode(',', $request->categories));
+        }
+        
+        // Filtro por precio
+        if ($request->has('min_price')) {
+            $query->where('price', '>=', $request->min_price);
+        }
+        
+        if ($request->has('max_price')) {
+            $query->where('price', '<=', $request->max_price);
+        }
+        
+        // Ordenación
+        $sortOptions = [
+            'price-asc' => ['price', 'asc'],
+            'price-desc' => ['price', 'desc'],
+            'name-asc' => ['name', 'asc'],
+            'name-desc' => ['name', 'desc'],
+        ];
+        
+        $sort = $request->get('sort', 'price-asc');
+        $sortOption = $sortOptions[$sort] ?? $sortOptions['price-asc'];
+        
+        $query->orderBy($sortOption[0], $sortOption[1]);
+        
+        $products = $query->get();
+        
         return Inertia::render('Products/Index', [
-            'products' => $products->map(function ($product) {
-                return [
-                    'id' => $product->id,
-                    'name' => $product->name,
-                    'slug' => $product->slug,
-                    'description' => $product->description,
-                    'price' => $product->price / 100,
-                    'stock' => $product->stock,
-                    'gender' => $product->gender,
-                    'main_image' => $product->main_image ? asset('storage/' . $product->main_image) : null,
-                    'images' => $product->images ? array_map(function ($imagePath) {
-                        return asset('storage/' . $imagePath);
-                    }, json_decode($product->images, true)) : [],
-                    'category' => $product->category->name,
-                ];
-            })
+            'products' => $products,
+            'filters' => $request->only(['genders', 'categories', 'min_price', 'max_price', 'sort'])
         ]);
     }
 
-    public function show(Product $product)
-    {
-        $product->load(['category', 'size']);
+public function show(Product $product)
+{
+    $product->load(['category', 'size']);
 
-        return Inertia::render('Products/Show', [
-            'product' => [
-                'id' => $product->id,
-                'name' => $product->name,
-                'slug' => $product->slug,
-                'description' => $product->description,
-                'price' => $product->price / 100,
-                'stock' => $product->stock,
-                'gender' => $product->gender,
-                'size' => $product->size->name,
-                'category' => $product->category->name,
-                'main_image' => $product->main_image ? asset('storage/' . $product->main_image) : null,
-                'images' => $product->images ? array_map(function ($imagePath) {
-                    return asset('storage/' . $imagePath);
-                }, json_decode($product->images, true)) : [],
-            ]
-        ]);
-    }
+    // Obtener todas las tallas disponibles para productos similares
+    $availableSizes = Size::whereHas('products', function($query) use ($product) {
+        $query->where('category_id', $product->category_id)
+              ->where('gender', $product->gender);
+    })->pluck('name')->toArray();
+
+    return Inertia::render('Products/Show', [
+        'product' => [
+            'id' => $product->id,
+            'name' => $product->name,
+            'slug' => $product->slug,
+            'description' => $product->description,
+            'price' => $product->price / 100,
+            'stock' => $product->stock,
+            'gender' => $product->gender,
+            'size' => $product->size->name,
+            'sizes' => $availableSizes ?: [$product->size->name], // Usar tallas disponibles o la talla actual
+            'category' => $product->category->name,
+            'main_image' => $product->main_image ? asset('storage/' . $product->main_image) : null,
+            'images' => $product->images ? array_map(function ($imagePath) {
+                return asset('storage/' . $imagePath);
+            }, json_decode($product->images, true)) : [],
+        ]
+    ]);
+}
 }

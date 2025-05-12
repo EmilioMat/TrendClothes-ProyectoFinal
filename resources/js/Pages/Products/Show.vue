@@ -120,12 +120,16 @@
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { Link } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
+import { useCartStore } from '@/stores/cart';
+import { toast } from 'vue3-toastify';
+import 'vue3-toastify/dist/index.css';
 
 const props = defineProps({
   product: {
     type: Object,
     required: true,
     default: () => ({
+      id: '',
       name: '',
       brand: '',
       category: '',
@@ -147,6 +151,7 @@ const props = defineProps({
 
 const selectedSize = ref(null);
 const currentMainImage = ref(props.product.main_image);
+const cartStore = useCartStore();
 
 const formatPrice = (price) => {
   return new Intl.NumberFormat('es-ES', {
@@ -160,21 +165,25 @@ const changeMainImage = (image) => {
 };
 
 const addToCart = () => {
-  if (!selectedSize.value) return;
+  if (!selectedSize.value) {
+    toast.error('Por favor, selecciona una talla', {
+      position: toast.POSITION.TOP_RIGHT,
+      autoClose: 3000
+    });
+    return;
+  }
   
-  // Lógica para añadir al carrito
-  console.log('Añadiendo al carrito:', {
-    product: props.product.name,
-    size: selectedSize.value,
-    price: props.product.price
+  cartStore.addItem(props.product, selectedSize.value);
+  
+  toast.success('Producto añadido al carrito', {
+    position: toast.POSITION.TOP_RIGHT,
+    autoClose: 2000
   });
-  
-  // Aquí podrías llamar a una acción de tu store (Pinia) o hacer una petición API
 };
 
 const estimatedDeliveryDate = computed(() => {
   const date = new Date();
-  date.setDate(date.getDate() + 3); // 3 días para entrega
+  date.setDate(date.getDate() + 3);
   return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
 });
 </script>
