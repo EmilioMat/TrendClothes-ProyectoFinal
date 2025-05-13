@@ -57,6 +57,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::post('/products/update/{id}', [ProductController::class, 'update'])->name('admin.products.update');
     Route::delete('/products/image/{id}', [ProductController::class, 'deleteImage'])->name('admin.products.image.delete');
     Route::delete('/products/destroy/{id}', [ProductController::class, 'destroy'])->name('admin.products.destroy');
+    Route::post('/admin/products/{id}/toggle-publish', [ProductController::class, 'togglePublish'])->name('admin.products.toggle-publish');
 });
 
 require __DIR__ . '/auth.php';

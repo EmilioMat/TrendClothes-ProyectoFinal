@@ -23,6 +23,7 @@ class Product extends Model
         'color',
         'brand',
         'main_image',
+        'published',
     ];
 
     // Relaciones
