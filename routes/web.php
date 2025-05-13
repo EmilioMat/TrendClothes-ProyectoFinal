@@ -49,7 +49,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'redirectAdmin'], function ()
 // Rutas protegidas de administrador
 Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
-    
+
     // Productos
     Route::get('/products', [ProductController::class, 'adminIndex'])->name('admin.products.index');
     Route::get('/products/create', [ProductController::class, 'create'])->name('admin.products.create');
@@ -59,9 +59,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::delete('/products/destroy/{id}', [ProductController::class, 'destroy'])->name('admin.products.destroy');
     Route::post('/admin/products/{id}/toggle-publish', [ProductController::class, 'togglePublish'])->name('admin.products.toggle-publish');
     Route::post('/admin/products/delete-multiple', [ProductController::class, 'deleteMultiple'])->name('admin.products.delete-multiple');
-    Route::post('/admin/products/delete-multiple', [ProductController::class, 'deleteMultiple'])->name('admin.products.delete-multiple');
-Route::post('/admin/products/delete-multiple', [ProductController::class, 'deleteMultiple'])->name('admin.products.delete-multiple');
-Route::post('/admin/products/delete-all', [ProductController::class, 'deleteAll'])->name('admin.products.delete-all');
+    Route::post('/admin/products/delete-all', [ProductController::class, 'deleteAll'])->name('admin.products.delete-all');
 });
 
 require __DIR__ . '/auth.php';

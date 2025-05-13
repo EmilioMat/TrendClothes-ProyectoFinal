@@ -14,16 +14,25 @@ use Inertia\Inertia;
 class ProductController extends Controller
 {
     // Método para el panel de administración
-    public function adminIndex()
+    public function adminIndex(Request $request)
     {
-        $products = Product::with('category', 'size', 'product_images')->get();
+        $query = Product::with('category', 'size', 'product_images')
+            ->orderBy('created_at', 'desc');
+
+        // Añadir búsqueda si hay término
+        if ($request->has('search') && !empty($request->search)) {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        $products = $query->get();
         $categories = Category::all();
         $sizes = Size::all();
 
         return Inertia::render('Admin/Products/Index', [
             'products' => $products,
             'categories' => $categories,
-            'sizes' => $sizes
+            'sizes' => $sizes,
+            'filters' => $request->only(['search']) // Pasar el término de búsqueda a la vista
         ]);
     }
 
