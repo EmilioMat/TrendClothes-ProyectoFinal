@@ -12,16 +12,17 @@ class Product extends Model
 
     protected $fillable = [
         'name',
+        'slug',
         'description',
         'price',
         'stock',
         'category_id',
         'size_id',
+        'brand_id', // Added
         'gender',
-        'color', 
-        'brand', 
+        'color',
+        'brand',
         'main_image',
-        'images'
     ];
 
     // Relaciones
@@ -33,6 +34,11 @@ class Product extends Model
     public function size()
     {
         return $this->belongsTo(Size::class);
+    }
+
+    public function brand()
+    {
+        return $this->belongsTo(Brand::class);
     }
 
     public function reviews()
@@ -50,7 +56,7 @@ class Product extends Model
         return $this->belongsToMany(Promotion::class, 'product_promotion', 'product_id', 'promotion_id');
     }
 
-    public function images()
+    public function product_images()
     {
         return $this->hasMany(ProductImage::class);
     }

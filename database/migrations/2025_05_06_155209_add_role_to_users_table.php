@@ -9,16 +9,26 @@ return new class extends Migration
     public function up()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('role')->default('client'); // 'client' o 'admin'
-            $table->boolean('isAdmin')->default(false); // Añade esto para compatibilidad
+            if (!Schema::hasColumn('users', 'role')) {
+                $table->string('role')->default('client');
+            }
+            // Si decides usar 'isAdmin', descomenta también su creación
+            // if (!Schema::hasColumn('users', 'isAdmin')) {
+            //     $table->boolean('isAdmin')->default(false);
+            // }
         });
     }
 
     public function down()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('role');
-            $table->dropColumn('isAdmin');
+            if (Schema::hasColumn('users', 'role')) {
+                $table->dropColumn('role');
+            }
+            if (Schema::hasColumn('users', 'isAdmin')) {
+                $table->dropColumn('isAdmin');
+            }
         });
     }
 };
+

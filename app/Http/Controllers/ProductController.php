@@ -5,24 +5,108 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Size;
 use App\Models\Product;
+use App\Models\ProductImage; // Añade este modelo
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str; // Añade para manejar slugs
 use Inertia\Inertia;
 
 class ProductController extends Controller
 {
+    // Método para el panel de administración
+    public function adminIndex()
+    {
+        $products = Product::with('category', 'size', 'product_images')->get();
+        $categories = Category::all();
+        $sizes = Size::all();
+
+        return Inertia::render('Admin/Products/Index', [
+            'products' => $products,
+            'categories' => $categories,
+            'sizes' => $sizes
+        ]);
+    }
+
+    // Método para la tienda pública
+    public function index(Request $request)
+    {
+        $query = Product::query();
+
+        // Filtros (mantén tu lógica actual)
+        if ($request->has('genders') && !empty($request->genders)) {
+            $query->whereIn('gender', explode(',', $request->genders));
+        }
+
+        // ... (resto de tus filtros actuales)
+
+        $products = $query->get();
+
+        return Inertia::render('Products/Index', [
+            'products' => $products,
+            'filters' => $request->only(['genders', 'categories', 'min_price', 'max_price', 'sort'])
+        ]);
+    }
+
     public function create()
     {
         $categories = Category::all();
         $sizes = Size::all();
 
-        return Inertia::render('Products/Create', [
+        return Inertia::render('Admin/Products/Create', [
             'categories' => $categories,
             'sizes' => $sizes,
         ]);
     }
 
-    public function store(Request $request)
+public function store(Request $request)
+{
+    $validated = $request->validate([
+        'name' => 'required|string|max:255',
+        'description' => 'nullable|string',
+        'price' => 'required|numeric|min:0',
+        'stock' => 'required|integer|min:0',
+        'category_id' => 'required|exists:categories,id',
+        'size_id' => 'required|exists:sizes,id',
+        'gender' => 'required|in:male,female,unisex',
+        'color' => 'nullable|string|max:255',
+        'brand' => 'nullable|string|max:255',
+        'main_image' => 'required|image|max:2048',
+        'images' => 'nullable|array', // Cambiado a 'images' para coincidir con el frontend
+        'images.*' => 'image|max:2048',
+    ]);
+
+    // Guardar imagen principal
+    $mainImagePath = $request->file('main_image')->store('products', 'public');
+
+    $product = Product::create([
+        'name' => $validated['name'],
+        'description' => $validated['description'],
+        'price' => $validated['price'],
+        'stock' => $validated['stock'],
+        'category_id' => $validated['category_id'],
+        'size_id' => $validated['size_id'],
+        'gender' => $validated['gender'],
+        'color' => $validated['color'],
+        'brand' => $validated['brand'],
+        'main_image' => $mainImagePath,
+    ]);
+
+    // Guardar imágenes adicionales
+    if ($request->hasFile('images')) {
+        foreach ($request->file('images') as $image) {
+            $path = $image->store('products', 'public');
+            $product->product_images()->create(['image_path' => $path]);
+        }
+    }
+
+    return redirect()->route('admin.products.index')->with('success', 'Product created.');
+}
+
+    // Añade estos métodos nuevos
+    public function update(Request $request, $id)
     {
+        $product = Product::findOrFail($id);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -34,89 +118,55 @@ class ProductController extends Controller
             'color' => 'nullable|string|max:255',
             'brand' => 'nullable|string|max:255',
             'main_image' => 'nullable|image|max:2048',
-            'images' => 'nullable|array',
-            'images.*' => 'image|max:2048',
+            'product_images' => 'nullable|array',
+            'product_images.*' => 'image|max:2048',
         ]);
 
-        // Prepare product data
-        $productData = $validated;
+        // Actualiza los campos básicos
+        $product->update($request->except(['main_image', 'product_images']));
 
-        // Handle main_image
+        // Manejo de la imagen principal
         if ($request->hasFile('main_image')) {
-            $mainImagePath = $request->file('main_image')->store('product_images', 'public');
-            $productData['main_image'] = $mainImagePath;
-        } else {
-            $productData['main_image'] = null;
+            // Elimina la imagen anterior si existe
+            if ($product->main_image) {
+                Storage::disk('public')->delete($product->main_image);
+            }
+
+            $path = $request->file('main_image')->store('products', 'public');
+            $product->update(['main_image' => $path]);
         }
 
-        // Handle additional images
-        $additionalImages = [];
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $image) {
-                $imagePath = $image->store('product_images', 'public');
-                $additionalImages[] = $imagePath;
+        // Manejo de imágenes adicionales
+        if ($request->hasFile('product_images')) {
+            foreach ($request->file('product_images') as $image) {
+                $path = $image->store('products', 'public');
+                $product->product_images()->create(['image_path' => $path]);
             }
         }
-        $productData['images'] = json_encode($additionalImages);
 
-        // Create the product
-        $product = Product::create($productData);
-
-        return redirect()->route('dashboard')->with('success', 'Producto creado exitosamente.');
+        return redirect()->route('admin.products.index')->with('success', 'Product updated successfully.');
     }
 
-    public function index(Request $request)
+    public function deleteImage($id)
     {
-        $query = Product::query();
-        
-        // Filtro por género
-        if ($request->has('genders') && !empty($request->genders)) {
-            $query->whereIn('gender', explode(',', $request->genders));
-        }
-        
-        // Filtro por categoría
-        if ($request->has('categories') && !empty($request->categories)) {
-            $query->whereIn('category', explode(',', $request->categories));
-        }
-        
-        // Filtro por precio
-        if ($request->has('min_price')) {
-            $query->where('price', '>=', $request->min_price);
-        }
-        
-        if ($request->has('max_price')) {
-            $query->where('price', '<=', $request->max_price);
-        }
-        
-        // Ordenación
-        $sortOptions = [
-            'price-asc' => ['price', 'asc'],
-            'price-desc' => ['price', 'desc'],
-            'name-asc' => ['name', 'asc'],
-            'name-desc' => ['name', 'desc'],
-        ];
-        
-        $sort = $request->get('sort', 'price-asc');
-        $sortOption = $sortOptions[$sort] ?? $sortOptions['price-asc'];
-        
-        $query->orderBy($sortOption[0], $sortOption[1]);
-        
-        $products = $query->get();
-        
-        return Inertia::render('Products/Index', [
-            'products' => $products,
-            'filters' => $request->only(['genders', 'categories', 'min_price', 'max_price', 'sort'])
-        ]);
+        ProductImage::where('id', $id)->delete();
+        return redirect()->back()->with('success', 'Image deleted successfully.');
     }
 
-public function show(Product $product)
+    public function destroy($id)
+    {
+        Product::findOrFail($id)->delete();
+        return redirect()->route('admin.products.index')->with('success', 'Product deleted successfully.');
+    }
+
+   public function show(Product $product)
 {
-    $product->load(['category', 'size']);
+    $product->load(['category', 'size', 'product_images']);
 
     // Obtener todas las tallas disponibles para productos similares
-    $availableSizes = Size::whereHas('products', function($query) use ($product) {
+    $availableSizes = Size::whereHas('products', function ($query) use ($product) {
         $query->where('category_id', $product->category_id)
-              ->where('gender', $product->gender);
+            ->where('gender', $product->gender);
     })->pluck('name')->toArray();
 
     return Inertia::render('Products/Show', [
@@ -125,16 +175,18 @@ public function show(Product $product)
             'name' => $product->name,
             'slug' => $product->slug,
             'description' => $product->description,
-            'price' => $product->price / 100,
+            'price' => $product->price,
             'stock' => $product->stock,
             'gender' => $product->gender,
             'size' => $product->size->name,
-            'sizes' => $availableSizes ?: [$product->size->name], // Usar tallas disponibles o la talla actual
+            'sizes' => $availableSizes ?: [$product->size->name],
             'category' => $product->category->name,
-            'main_image' => $product->main_image ? asset('storage/' . $product->main_image) : null,
-            'images' => $product->images ? array_map(function ($imagePath) {
-                return asset('storage/' . $imagePath);
-            }, json_decode($product->images, true)) : [],
+            'main_image' => $product->main_image ? Storage::url($product->main_image) : null,
+            'images' => $product->product_images->map(function ($image) {
+                return Storage::url($image->image_path);
+            })->toArray(),
+            'brand' => $product->brand,
+            'color' => $product->color
         ]
     ]);
 }
