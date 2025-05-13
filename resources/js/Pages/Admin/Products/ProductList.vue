@@ -36,6 +36,14 @@ const additionalImagesPreviews = ref([]);
 const previewDialogVisible = ref(false);
 const previewImageUrl = ref("");
 
+// Bulk delete state
+const selectedProducts = ref([]);
+const selectAll = ref(false);
+const showCheckboxes = ref(false);
+const showDeleteModal = ref(false);
+const showSuccessMessage = ref(false);
+const deleteAllMode = ref(false);
+
 // Reset form data
 const resetFormData = () => {
     id.value = "";
@@ -150,7 +158,6 @@ const addProduct = async () => {
         formData.append("main_image", main_image.value);
     }
 
-    // Corrige el manejo de imágenes adicionales
     if (additional_images.value && additional_images.value.length > 0) {
         Array.from(additional_images.value).forEach((image, index) => {
             formData.append(`product_images[${index}]`, image);
@@ -180,13 +187,12 @@ const updateProduct = async () => {
     formData.append("gender", gender.value);
     formData.append("color", color.value);
     formData.append("brand", brand.value);
-    formData.append("_method", "POST"); // Importante para Laravel
+    formData.append("_method", "POST");
 
     if (main_image.value) {
         formData.append("main_image", main_image.value);
     }
 
-    // Manejo de imágenes adicionales
     if (additional_images.value && additional_images.value.length > 0) {
         Array.from(additional_images.value).forEach((image, index) => {
             formData.append(`product_images[${index}]`, image);
@@ -215,26 +221,85 @@ const deleteImage = async (imageId) => {
 
 // Delete product
 const deleteProduct = async (productId) => {
-    if (confirm("¿Estás seguro de eliminar este producto?")) {
-        await router.delete(route("admin.products.destroy", productId));
+    showDeleteModal.value = true;
+    deleteAllMode.value = false;
+    selectedProducts.value = [productId];
+};
+
+// Toggle checkboxes visibility
+const toggleCheckboxes = () => {
+    showCheckboxes.value = !showCheckboxes.value;
+    if (!showCheckboxes.value) {
+        selectedProducts.value = [];
+        selectAll.value = false;
     }
 };
 
-// Handle dialog close
-const handleClose = (done) => {
-    if (confirm("Are you sure you want to close this dialog?")) {
-        resetFormData();
-        done();
+// Toggle select all products
+const toggleSelectAll = () => {
+    if (selectAll.value) {
+        selectedProducts.value = products.value.map(product => product.id);
+    } else {
+        selectedProducts.value = [];
     }
 };
 
-// Añade esta función al script setup
-const togglePublish = async (productId) => {
-    await router
-        .post(route("admin.products.toggle-publish", productId))
-        .then(() => {
-            router.reload({ only: ["products"] });
+// Open delete modal
+const openDeleteModal = () => {
+    if (selectedProducts.value.length === 0 && !deleteAllMode.value) {
+        showDeleteModal.value = true;
+        return;
+    }
+    showDeleteModal.value = true;
+};
+
+// Open delete all modal
+const openDeleteAllModal = () => {
+    deleteAllMode.value = true;
+    showDeleteModal.value = true;
+};
+
+// Confirm deletion
+const confirmDelete = async () => {
+    if (deleteAllMode.value) {
+        await router.post(route('admin.products.delete-all'), {}, {
+            onSuccess: () => {
+                selectedProducts.value = [];
+                selectAll.value = false;
+                showCheckboxes.value = false;
+                showDeleteModal.value = false;
+                deleteAllMode.value = false;
+                showSuccessMessage.value = true;
+                setTimeout(() => showSuccessMessage.value = false, 3000);
+                router.reload({ only: ['products'] });
+            },
         });
+    } else {
+        if (selectedProducts.value.length === 0) {
+            showDeleteModal.value = false;
+            return;
+        }
+        await router.post(route('admin.products.delete-multiple'), { ids: selectedProducts.value }, {
+            onSuccess: () => {
+                selectedProducts.value = [];
+                selectAll.value = false;
+                showCheckboxes.value = false;
+                showDeleteModal.value = false;
+                showSuccessMessage.value = true;
+                setTimeout(() => showSuccessMessage.value = false, 3000);
+                router.reload({ only: ['products'] });
+            },
+        });
+    }
+};
+
+// Toggle publish status
+const togglePublish = async (productId) => {
+    await router.post(route("admin.products.toggle-publish", productId), {}, {
+        onSuccess: () => {
+            router.reload({ only: ["products"] });
+        },
+    });
 };
 </script>
 
@@ -518,7 +583,34 @@ const togglePublish = async (productId) => {
             </form>
         </el-dialog>
 
-        <!-- Rest of the template (table, search, etc.) -->
+        <!-- Delete Confirmation Modal -->
+        <el-dialog
+            v-model="showDeleteModal"
+            :title="deleteAllMode ? 'Eliminar todos los productos' : `Eliminar ${selectedProducts.length} producto${selectedProducts.length > 1 ? 's' : ''}`"
+            width="30%"
+        >
+            <p class="text-sm text-gray-600 dark:text-gray-400">
+                ¿Estás seguro de que deseas eliminar {{ deleteAllMode ? 'todos los productos' : 'los productos seleccionados' }}? Esta acción no se puede deshacer.
+            </p>
+            <template #footer>
+                <span class="dialog-footer">
+                    <el-button @click="showDeleteModal = false">Cancelar</el-button>
+                    <el-button type="danger" @click="confirmDelete">Eliminar</el-button>
+                </span>
+            </template>
+        </el-dialog>
+
+        <!-- Success Message -->
+        <transition name="fade">
+            <div
+                v-if="showSuccessMessage"
+                class="fixed top-4 right-4 bg-green-100 text-green-800 text-sm font-medium px-4 py-2 rounded-md shadow-md"
+            >
+                Productos eliminados correctamente
+            </div>
+        </transition>
+
+        <!-- Main Content -->
         <div class="mx-auto max-w-screen-xl px-4 lg:px-12">
             <div
                 class="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden"
@@ -526,11 +618,21 @@ const togglePublish = async (productId) => {
                 <div
                     class="flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4"
                 >
+                    <!-- Floating Delete Button -->
+                    <transition name="fade">
+                        <button
+                            v-if="selectedProducts.length > 0 && showCheckboxes"
+                            @click="openDeleteModal"
+                            class="fixed bottom-4 right-4 px-4 py-2 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 focus:outline-none focus:ring-4 focus:ring-red-300 flex items-center space-x-2 z-50"
+                        >
+                            <span>Eliminar {{ selectedProducts.length }} seleccionado{{ selectedProducts.length > 1 ? 's' : '' }}</span>
+                        </button>
+                    </transition>
+
+                    <!-- Search Bar -->
                     <div class="w-full md:w-1/2">
                         <form class="flex items-center">
-                            <label for="simple-search" class="sr-only"
-                                >Search</label
-                            >
+                            <label for="simple-search" class="sr-only">Search</label>
                             <div class="relative w-full">
                                 <div
                                     class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
@@ -559,6 +661,8 @@ const togglePublish = async (productId) => {
                             </div>
                         </form>
                     </div>
+
+                    <!-- Actions and Buttons -->
                     <div
                         class="w-full md:w-auto flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0"
                     >
@@ -582,7 +686,6 @@ const togglePublish = async (productId) => {
                             </svg>
                             Add product
                         </button>
-                        <!-- Actions and Filter buttons (unchanged) -->
                         <div
                             class="flex items-center space-x-3 w-full md:w-auto"
                         >
@@ -605,30 +708,27 @@ const togglePublish = async (productId) => {
                                         d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
                                     />
                                 </svg>
-                                Actions
+                                Acciones
                             </button>
                             <div
                                 id="actionsDropdown"
                                 class="hidden z-10 w-44 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600"
                             >
-                                <ul
-                                    class="py-1 text-sm text-gray-700 dark:text-gray-200"
-                                    aria-labelledby="actionsDropdownButton"
-                                >
-                                    <li>
-                                        <a
-                                            href="#"
-                                            class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
-                                            >Mass Edit</a
-                                        >
-                                    </li>
-                                </ul>
                                 <div class="py-1">
                                     <a
                                         href="#"
+                                        @click.prevent="toggleCheckboxes"
                                         class="block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white"
-                                        >Delete all</a
                                     >
+                                        {{ showCheckboxes ? 'Ocultar selección' : 'Eliminar seleccionados' }}
+                                    </a>
+                                    <a
+                                        href="#"
+                                        @click.prevent="openDeleteAllModal"
+                                        class="block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white"
+                                    >
+                                        Eliminar todos
+                                    </a>
                                 </div>
                             </div>
                             <button
@@ -756,17 +856,23 @@ const togglePublish = async (productId) => {
                             class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400"
                         >
                             <tr>
-                                <th scope="col" class="px-4 py-3">
-                                    Product name
+                                <th scope="col" class="px-4 py-3" v-if="showCheckboxes">
+                                    <input
+                                        type="checkbox"
+                                        v-model="selectAll"
+                                        @change="toggleSelectAll"
+                                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                                    />
                                 </th>
-                                <th scope="col" class="px-4 py-3">Category</th>
-                                <th scope="col" class="px-4 py-3">Brand</th>
-                                <th scope="col" class="px-4 py-3">Quantity</th>
-                                <th scope="col" class="px-4 py-3">Price</th>
+                                <th scope="col" class="px-4 py-3">Nombre</th>
+                                <th scope="col" class="px-4 py-3">Categoría</th>
+                                <th scope="col" class="px-4 py-3">Marca</th>
+                                <th scope="col" class="px-4 py-3">Cantidad</th>
+                                <th scope="col" class="px-4 py-3">Precio</th>
                                 <th scope="col" class="px-4 py-3">Stock</th>
-                                <th scope="col" class="px-4 py-3">Publish</th>
+                                <th scope="col" class="px-4 py-3">Publicado</th>
                                 <th scope="col" class="px-4 py-3">
-                                    <span class="sr-only">Actions</span>
+                                    <span class="sr-only">Acciones</span>
                                 </th>
                             </tr>
                         </thead>
@@ -776,6 +882,14 @@ const togglePublish = async (productId) => {
                                 :key="product.id"
                                 class="border-b dark:border-gray-700"
                             >
+                                <td class="px-4 py-3" v-if="showCheckboxes">
+                                    <input
+                                        type="checkbox"
+                                        :value="product.id"
+                                        v-model="selectedProducts"
+                                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                                    />
+                                </td>
                                 <th
                                     scope="row"
                                     class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white"
@@ -792,13 +906,15 @@ const togglePublish = async (productId) => {
                                     <span
                                         v-if="product.stock > 0"
                                         class="bg-green-100 text-green-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300"
-                                        >In Stock</span
                                     >
+                                        En stock
+                                    </span>
                                     <span
                                         v-else
                                         class="bg-red-100 text-red-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-red-900 dark:text-red-300"
-                                        >Out of Stock</span
                                     >
+                                        Sin stock
+                                    </span>
                                 </td>
                                 <td class="px-4 py-3">
                                     <button
@@ -813,8 +929,8 @@ const togglePublish = async (productId) => {
                                     >
                                         {{
                                             product.published
-                                                ? "Published"
-                                                : "Unpublished"
+                                                ? "Publicado"
+                                                : "No publicado"
                                         }}
                                     </button>
                                 </td>
@@ -862,10 +978,7 @@ const togglePublish = async (productId) => {
                                             <a
                                                 href="#"
                                                 @click.prevent="
-                                                    deleteProduct(
-                                                        product.id,
-                                                        index
-                                                    )
+                                                    deleteProduct(product.id)
                                                 "
                                                 class="block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white"
                                                 >Delete</a
@@ -982,5 +1095,12 @@ const togglePublish = async (productId) => {
 </template>
 
 <style scoped>
-/* Add any custom styles if needed */
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 0.3s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
+}
 </style>

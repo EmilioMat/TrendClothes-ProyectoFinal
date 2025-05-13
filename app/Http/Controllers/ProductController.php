@@ -200,4 +200,24 @@ class ProductController extends Controller
 
         return redirect()->back()->with('success', 'Product status updated');
     }
+
+
+    public function deleteMultiple(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:products,id',
+        ]);
+
+        Product::whereIn('id', $request->ids)->delete();
+
+        return redirect()->back()->with('success', 'Productos eliminados correctamente');
+    }
+
+    public function deleteAll()
+    {
+        Product::truncate();
+
+        return redirect()->back()->with('success', 'Todos los productos eliminados correctamente');
+    }
 }
