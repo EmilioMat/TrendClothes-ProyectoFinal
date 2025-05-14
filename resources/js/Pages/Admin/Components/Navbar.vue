@@ -56,63 +56,14 @@
                             d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
                         />
                     </svg>
-
                     <span
                         class="self-center text-2xl font-semibold whitespace-nowrap dark:text-white"
-                        >TrendClothes</span
                     >
+                        TrendClothes
+                    </span>
                 </Link>
-                <form action="#" method="GET" class="hidden md:block md:pl-2">
-                    <label for="topbar-search" class="sr-only">Search</label>
-                    <div class="relative md:w-64 md:w-96">
-                        <div
-                            class="flex absolute inset-y-0 left-0 items-center pl-3 pointer-events-none"
-                        >
-                            <svg
-                                class="w-5 h-5 text-gray-500 dark:text-gray-400"
-                                fill="currentColor"
-                                viewBox="0 0 20 20"
-                                xmlns="http://www.w3.org/2000/svg"
-                            >
-                                <path
-                                    fill-rule="evenodd"
-                                    clip-rule="evenodd"
-                                    d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
-                                ></path>
-                            </svg>
-                        </div>
-                        <input
-                            type="text"
-                            name="email"
-                            id="topbar-search"
-                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                            placeholder="Search"
-                        />
-                    </div>
-                </form>
             </div>
             <div class="flex items-center lg:order-2">
-                <button
-                    type="button"
-                    data-drawer-toggle="drawer-navigation"
-                    aria-controls="drawer-navigation"
-                    class="p-2 mr-1 text-gray-500 rounded-lg md:hidden hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-700 focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600"
-                >
-                    <span class="sr-only">Toggle search</span>
-                    <svg
-                        aria-hidden="true"
-                        class="w-6 h-6"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                        xmlns="http://www.w3.org/2000/svg"
-                    >
-                        <path
-                            clip-rule="evenodd"
-                            fill-rule="evenodd"
-                            d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
-                        ></path>
-                    </svg>
-                </button>
                 <!-- Notifications -->
                 <button
                     type="button"
@@ -180,9 +131,10 @@
                                     New message from
                                     <span
                                         class="font-semibold text-gray-900 dark:text-white"
-                                        >Bonnie Green</span
-                                    >: "Hey, what's up? All set for the
-                                    presentation?"
+                                    >
+                                        Bonnie Green
+                                    </span>
+                                    : "Hey, what's up? All set for the presentation?"
                                 </div>
                                 <div
                                     class="text-xs font-medium text-primary-600 dark:text-primary-500"
@@ -223,13 +175,15 @@
                                 >
                                     <span
                                         class="font-semibold text-gray-900 dark:text-white"
-                                        >Jese leos</span
                                     >
+                                        Jese leos
+                                    </span>
                                     and
                                     <span
                                         class="font-medium text-gray-900 dark:text-white"
-                                        >5 others</span
                                     >
+                                        5 others
+                                    </span>
                                     started following you.
                                 </div>
                                 <div
@@ -273,15 +227,16 @@
                                 >
                                     <span
                                         class="font-semibold text-gray-900 dark:text-white"
-                                        >Joseph Mcfall</span
                                     >
+                                        Joseph Mcfall
+                                    </span>
                                     and
                                     <span
                                         class="font-medium text-gray-900 dark:text-white"
-                                        >141 others</span
                                     >
-                                    love your story. See it and view more
-                                    stories.
+                                        141 others
+                                    </span>
+                                    love your story. See it and view more stories.
                                 </div>
                                 <div
                                     class="text-xs font-medium text-primary-600 dark:text-primary-500"
@@ -324,13 +279,15 @@
                                 >
                                     <span
                                         class="font-semibold text-gray-900 dark:text-white"
-                                        >Leslie Livingston</span
                                     >
+                                        Leslie Livingston
+                                    </span>
                                     mentioned you in a comment:
                                     <span
                                         class="font-medium text-primary-600 dark:text-primary-500"
-                                        >@bonnie.green</span
                                     >
+                                        @bonnie.green
+                                    </span>
                                     what do you say?
                                 </div>
                                 <div
@@ -372,10 +329,10 @@
                                 >
                                     <span
                                         class="font-semibold text-gray-900 dark:text-white"
-                                        >Robert Brown</span
                                     >
-                                    posted a new video: Glassmorphism - learn
-                                    how to implement the new design trend.
+                                        Robert Brown
+                                    </span>
+                                    posted a new video: Glassmorphism - learn how to implement the new design trend.
                                 </div>
                                 <div
                                     class="text-xs font-medium text-primary-600 dark:text-primary-500"
@@ -397,9 +354,7 @@
                                 viewBox="0 0 20 20"
                                 xmlns="http://www.w3.org/2000/svg"
                             >
-                                <path
-                                    d="M10 12a2 2 0 100-4 2 2 0 000 4z"
-                                ></path>
+                                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path>
                                 <path
                                     fill-rule="evenodd"
                                     d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
@@ -676,15 +631,17 @@
                             <a
                                 href="#"
                                 class="block py-2 px-4 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-400 dark:hover:text-white"
-                                >My profile</a
                             >
+                                My profile
+                            </a>
                         </li>
                         <li>
                             <a
                                 href="#"
                                 class="block py-2 px-4 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-400 dark:hover:text-white"
-                                >Account settings</a
                             >
+                                Account settings
+                            </a>
                         </li>
                     </ul>
                     <ul
@@ -695,7 +652,8 @@
                             <a
                                 href="#"
                                 class="flex items-center py-2 px-4 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
-                                ><svg
+                            >
+                                <svg
                                     class="mr-2 w-5 h-5 text-gray-400"
                                     fill="currentColor"
                                     viewBox="0 0 20 20"
@@ -707,14 +665,15 @@
                                         clip-rule="evenodd"
                                     ></path>
                                 </svg>
-                                My likes</a
-                            >
+                                My likes
+                            </a>
                         </li>
                         <li>
                             <a
                                 href="#"
                                 class="flex items-center py-2 px-4 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
-                                ><svg
+                            >
+                                <svg
                                     class="mr-2 w-5 h-5 text-gray-400"
                                     fill="currentColor"
                                     viewBox="0 0 20 20"
@@ -724,8 +683,8 @@
                                         d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"
                                     ></path>
                                 </svg>
-                                Collections</a
-                            >
+                                Collections
+                            </a>
                         </li>
                         <li>
                             <a
@@ -775,8 +734,8 @@
                                 as="button"
                                 class="block cursor-pointer py-2 px-4 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
                             >
-                                Log out</Link
-                            >
+                                Log out
+                            </Link>
                         </li>
                     </ul>
                 </div>

@@ -59,7 +59,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::post('/products/{id}/toggle-publish', [ProductController::class, 'togglePublish'])->name('admin.products.toggle-publish');
     Route::post('/products/delete-multiple', [ProductController::class, 'deleteMultiple'])->name('admin.products.delete-multiple');
     Route::post('/products/delete-all', [ProductController::class, 'deleteAll'])->name('admin.products.delete-all');
-Route::get('/dashboard', [DashboardController::class, 'getMetrics'])->name('admin.dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'getMetrics'])->name('admin.dashboard');
 });
 
 require __DIR__ . '/auth.php';
