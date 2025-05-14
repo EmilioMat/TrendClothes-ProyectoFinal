@@ -659,12 +659,14 @@
                     <div class="py-3 px-4">
                         <span
                             class="block text-sm font-semibold text-gray-900 dark:text-white"
-                            >Neil Sims</span
                         >
+                            {{ user.name }}
+                        </span>
                         <span
                             class="block text-sm text-gray-900 truncate dark:text-white"
-                            >name@flowbite.com</span
                         >
+                            {{ user.email }}
+                        </span>
                     </div>
                     <ul
                         class="py-1 text-gray-700 dark:text-gray-300"
@@ -785,4 +787,7 @@
 
 <script setup>
 import { Link } from "@inertiajs/vue3";
+import { usePage } from "@inertiajs/vue3";
+const page = usePage();
+const user = page.props.auth.user;
 </script>
