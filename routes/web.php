@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminAuthController;
+use App\Http\Controllers\Admin\AdminCategoryController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\CartController;
@@ -60,6 +61,14 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::post('/products/delete-multiple', [ProductController::class, 'deleteMultiple'])->name('admin.products.delete-multiple');
     Route::post('/products/delete-all', [ProductController::class, 'deleteAll'])->name('admin.products.delete-all');
     Route::get('/dashboard', [DashboardController::class, 'getMetrics'])->name('admin.dashboard');
+
+    // Categorías
+    Route::get('/categories', [AdminCategoryController::class, 'index'])->name('admin.categories.index');
+    Route::post('/categories/store', [AdminCategoryController::class, 'store'])->name('admin.categories.store');
+    Route::post('/categories/update/{id}', [AdminCategoryController::class, 'update'])->name('admin.categories.update');
+    Route::delete('/categories/destroy/{id}', [AdminCategoryController::class, 'destroy'])->name('admin.categories.destroy');
+    Route::post('/categories/delete-multiple', [AdminCategoryController::class, 'deleteMultiple'])->name('admin.categories.delete-multiple');
+    Route::post('/categories/delete-all', [AdminCategoryController::class, 'deleteAll'])->name('admin.categories.delete-all');
 });
 
 require __DIR__ . '/auth.php';
