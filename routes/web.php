@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
@@ -21,9 +22,7 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
-Route::get('/dashboard', function () {
-    return redirect()->route('home');
-})->name('dashboard');
+
 
 // Rutas de autenticación de usuario normal
 Route::middleware('auth')->group(function () {
@@ -57,9 +56,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::post('/products/update/{id}', [ProductController::class, 'update'])->name('admin.products.update');
     Route::delete('/products/image/{id}', [ProductController::class, 'deleteImage'])->name('admin.products.image.delete');
     Route::delete('/products/destroy/{id}', [ProductController::class, 'destroy'])->name('admin.products.destroy');
-    Route::post('/admin/products/{id}/toggle-publish', [ProductController::class, 'togglePublish'])->name('admin.products.toggle-publish');
-    Route::post('/admin/products/delete-multiple', [ProductController::class, 'deleteMultiple'])->name('admin.products.delete-multiple');
-    Route::post('/admin/products/delete-all', [ProductController::class, 'deleteAll'])->name('admin.products.delete-all');
+    Route::post('/products/{id}/toggle-publish', [ProductController::class, 'togglePublish'])->name('admin.products.toggle-publish');
+    Route::post('/products/delete-multiple', [ProductController::class, 'deleteMultiple'])->name('admin.products.delete-multiple');
+    Route::post('/products/delete-all', [ProductController::class, 'deleteAll'])->name('admin.products.delete-all');
+Route::get('/dashboard', [DashboardController::class, 'getMetrics'])->name('admin.dashboard');
 });
 
 require __DIR__ . '/auth.php';
