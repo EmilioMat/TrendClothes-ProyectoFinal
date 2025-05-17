@@ -21,7 +21,7 @@ class AdminCategoryController extends Controller
             $query->where('name', 'like', '%' . $request->search . '%');
         }
 
-        $categories = $query->paginate(6);
+        $categories = $query->paginate(5);
 
         return Inertia::render('Admin/Categories/Index', [
             'categories' => $categories,
