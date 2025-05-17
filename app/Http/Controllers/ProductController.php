@@ -69,49 +69,49 @@ public function adminIndex(Request $request)
         ]);
     }
 
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'price' => 'required|numeric|min:0',
-            'stock' => 'required|integer|min:0',
-            'category_id' => 'required|exists:categories,id',
-            'size_id' => 'required|exists:sizes,id',
-            'gender' => 'required|in:male,female,unisex',
-            'color' => 'nullable|string|max:255',
-            'brand' => 'nullable|string|max:255',
-            'main_image' => 'required|image|max:2048',
-            'images' => 'nullable|array', // Cambiado a 'images' para coincidir con el frontend
-            'images.*' => 'image|max:2048',
-        ]);
+public function store(Request $request)
+{
+    $validated = $request->validate([
+        'name' => 'required|string|max:255',
+        'description' => 'nullable|string',
+        'price' => 'required|numeric|min:0',
+        'stock' => 'required|integer|min:0',
+        'category_id' => 'required|exists:categories,id',
+        'size_id' => 'required|exists:sizes,id',
+        'gender' => 'required|in:male,female,unisex',
+        'color' => 'nullable|string|max:255',
+        'brand' => 'nullable|string|max:255',
+        'main_image' => 'required|image|max:2048',
+        'product_images' => 'nullable|array', 
+        'product_images.*' => 'image|max:2048',
+    ]);
 
-        // Guardar imagen principal
-        $mainImagePath = $request->file('main_image')->store('products', 'public');
+    // Guardar imagen principal
+    $mainImagePath = $request->file('main_image')->store('products', 'public');
 
-        $product = Product::create([
-            'name' => $validated['name'],
-            'description' => $validated['description'],
-            'price' => $validated['price'],
-            'stock' => $validated['stock'],
-            'category_id' => $validated['category_id'],
-            'size_id' => $validated['size_id'],
-            'gender' => $validated['gender'],
-            'color' => $validated['color'],
-            'brand' => $validated['brand'],
-            'main_image' => $mainImagePath,
-        ]);
+    $product = Product::create([
+        'name' => $validated['name'],
+        'description' => $validated['description'],
+        'price' => $validated['price'],
+        'stock' => $validated['stock'],
+        'category_id' => $validated['category_id'],
+        'size_id' => $validated['size_id'],
+        'gender' => $validated['gender'],
+        'color' => $validated['color'],
+        'brand' => $validated['brand'],
+        'main_image' => $mainImagePath,
+    ]);
 
-        // Guardar imágenes adicionales
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $image) {
-                $path = $image->store('products', 'public');
-                $product->product_images()->create(['image_path' => $path]);
-            }
+    // Guardar imágenes adicionales
+    if ($request->hasFile('product_images')) {
+        foreach ($request->file('product_images') as $image) {
+            $path = $image->store('products', 'public');
+            $product->product_images()->create(['image_path' => $path]);
         }
-
-        return redirect()->route('admin.products.index')->with('success', 'Product created.');
     }
+
+    return redirect()->route('admin.products.index')->with('success', 'Producto creado correctamente.');
+}
 
     // Añade estos métodos nuevos
     public function update(Request $request, $id)
