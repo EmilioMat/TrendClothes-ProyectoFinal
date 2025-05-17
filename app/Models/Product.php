@@ -15,15 +15,12 @@ class Product extends Model
         'slug',
         'description',
         'price',
-        'stock',
         'category_id',
-        'size_id',
-        'brand_id', // Added
         'gender',
         'color',
         'brand',
         'main_image',
-        'published',
+        'published'
     ];
 
     // Relaciones
@@ -32,9 +29,11 @@ class Product extends Model
         return $this->belongsTo(Category::class);
     }
 
-    public function size()
+    public function sizes()
     {
-        return $this->belongsTo(Size::class);
+        return $this->belongsToMany(Size::class, 'product_size')
+            ->withPivot('stock')
+            ->withTimestamps();
     }
 
     public function brand()

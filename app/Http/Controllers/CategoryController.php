@@ -23,38 +23,49 @@ class CategoryController extends Controller
         ]);
     }
 
-    public function show($slug)
-    {
-        $category = Category::where('slug', $slug)
-            ->with(['products' => function ($query) {
-                $query->where('stock', '>', 0)
-                    ->where('published', true) // <- Añade esta línea
-                    ->orderBy('created_at', 'desc');
-            }])
-            ->firstOrFail();
+   public function show($slug)
+{
+    $category = Category::where('slug', $slug)->firstOrFail();
 
-        return Inertia::render('Categories/Show', [
-            'category' => [
-                'name' => $category->name,
-                'description' => $category->description,
-                'products' => $category->products->map(function ($product) {
-                    // Decode images JSON if it exists, otherwise empty array
-                    $imagesArray = $product->images ? json_decode($product->images, true) : [];
-                    $mappedImages = array_map(function ($imagePath) {
-                        return $imagePath ? asset('storage/' . $imagePath) : null;
-                    }, $imagesArray);
+    $products = $category->products()
+        ->where('published', true)
+        ->whereHas('sizes', function ($query) {
+            $query->where('stock', '>', 0);
+        })
+        ->with([
+            'category',
+            'sizes' => function ($query) {
+                $query->where('stock', '>', 0);
+            }
+        ])
+        ->orderBy('created_at', 'desc')
+        ->get();
 
-                    return [
-                        'id' => $product->id,
-                        'name' => $product->name,
-                        'slug' => $product->slug,
-                        'description' => $product->description,
-                        'price' => $product->price / 100, // Adjust price to match expected format
-                        'main_image' => $product->main_image ? asset('storage/' . $product->main_image) : null,
-                        'images' => $mappedImages,
-                    ];
-                })
-            ]
-        ]);
-    }
+    return Inertia::render('Categories/Show', [
+        'category' => [
+            'name' => $category->name,
+            'description' => $category->description,
+            'products' => $products->map(function ($product) {
+                $imagesArray = $product->images ? json_decode($product->images, true) : [];
+                $mappedImages = array_map(fn($path) => $path ? asset('storage/' . $path) : null, $imagesArray);
+
+                return [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'slug' => $product->slug,
+                    'description' => $product->description,
+                    'price' => $product->price / 100,
+                    'main_image' => $product->main_image ? asset('storage/' . $product->main_image) : null,
+                    'images' => $mappedImages,
+                    'sizes' => $product->sizes->map(fn($size) => [
+                        'id' => $size->id,
+                        'name' => $size->name,
+                        'stock' => $size->pivot->stock,
+                    ])
+                ];
+            })
+        ]
+    ]);
+}
+
 }

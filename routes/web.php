@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\AdminCategoryController;
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\AdminSizeController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
@@ -22,8 +23,6 @@ Route::get('/', function () {
         'flash' => session()->only(['success', 'error']),
     ]);
 })->name('home');
-
-
 
 // Rutas de autenticación de usuario normal
 Route::middleware('auth')->group(function () {
@@ -69,6 +68,14 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::delete('/categories/destroy/{id}', [AdminCategoryController::class, 'destroy'])->name('admin.categories.destroy');
     Route::post('/categories/delete-multiple', [AdminCategoryController::class, 'deleteMultiple'])->name('admin.categories.delete-multiple');
     Route::post('/categories/delete-all', [AdminCategoryController::class, 'deleteAll'])->name('admin.categories.delete-all');
+
+    // Tallas
+    Route::get('/sizes', [AdminSizeController::class, 'index'])->name('admin.sizes.index');
+    Route::post('/sizes/store', [AdminSizeController::class, 'store'])->name('admin.sizes.store');
+    Route::post('/sizes/update/{id}', [AdminSizeController::class, 'update'])->name('admin.sizes.update');
+    Route::delete('/sizes/destroy/{id}', [AdminSizeController::class, 'destroy'])->name('admin.sizes.destroy');
+    Route::post('/sizes/delete-multiple', [AdminSizeController::class, 'deleteMultiple'])->name('admin.sizes.delete-multiple');
+    Route::post('/sizes/delete-all', [AdminSizeController::class, 'deleteAll'])->name('admin.sizes.delete-all');
 });
 
 require __DIR__ . '/auth.php';

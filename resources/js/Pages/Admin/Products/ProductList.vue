@@ -20,15 +20,12 @@ const validationModalVisible = ref(false); // Modal para validación
 const validationErrors = ref([]); // Errores de validación
 const activeDropdown = ref(null); // Para rastrear el dropdown abierto
 
-
 // Form data
 const id = ref("");
 const name = ref("");
 const description = ref("");
 const price = ref("");
-const stock = ref("");
 const category_id = ref("");
-const size_id = ref("");
 const gender = ref("");
 const color = ref("");
 const brand = ref("");
@@ -47,6 +44,8 @@ const showDeleteModal = ref(false);
 const showSuccessMessage = ref(false);
 const deleteAllMode = ref(false);
 const searchQuery = ref("");
+const selectedSizeIds = ref([]);
+const sizesWithStock = ref([]);
 
 // Reset form data
 const resetFormData = () => {
@@ -54,9 +53,7 @@ const resetFormData = () => {
     name.value = "";
     description.value = "";
     price.value = "";
-    stock.value = "";
     category_id.value = "";
-    size_id.value = "";
     gender.value = "";
     color.value = "";
     brand.value = "";
@@ -65,13 +62,15 @@ const resetFormData = () => {
     productImages.value = [];
     mainImagePreview.value = null;
     additionalImagesPreviews.value = [];
+    sizesWithStock.value = [];
+    selectedSizeIds.value = []; // Añade esto
 };
 
 // Toggle dropdown
 const toggleDropdown = (productId) => {
-    activeDropdown.value = activeDropdown.value === productId ? null : productId;
+    activeDropdown.value =
+        activeDropdown.value === productId ? null : productId;
 };
-
 
 // Open edit modal
 const openEditModal = (product) => {
@@ -79,20 +78,27 @@ const openEditModal = (product) => {
     name.value = product.name;
     description.value = product.description;
     price.value = product.price;
-    stock.value = product.stock;
     category_id.value = product.category_id;
-    size_id.value = product.size_id;
     gender.value = product.gender;
     color.value = product.color;
     brand.value = product.brand;
+
+    // Cargar tallas seleccionadas y su stock
+    selectedSizeIds.value = product.sizes.map((size) => size.id);
+    sizesWithStock.value = product.sizes.map((size) => ({
+        size_id: size.id,
+        stock: size.pivot.stock,
+    }));
+
     productImages.value = product.product_images.map((img) => ({
         id: img.id,
         url: `/storage/${img.image_path}`,
         raw: null,
     }));
+
     editMode.value = true;
     dialogVisible.value = true;
-    activeDropdown.value = null; // Cerrar dropdown al abrir el modal
+    activeDropdown.value = null;
 };
 
 // Open add modal
@@ -150,15 +156,39 @@ const handleRemove = (file, fileList) => {
 // Validate form before submission
 const validateForm = () => {
     validationErrors.value = [];
-    if (!name.value) validationErrors.value.push("Name is required");
-    if (!description.value) validationErrors.value.push("Description is required");
-    if (!price.value) validationErrors.value.push("Price is required");
-    if (!stock.value) validationErrors.value.push("Stock is required");
-    if (!category_id.value) validationErrors.value.push("Category is required");
-    if (!size_id.value) validationErrors.value.push("Size is required");
-    if (!gender.value) validationErrors.value.push("Gender is required");
+    if (!name.value) validationErrors.value.push("El nombre es requerido");
+    if (!description.value)
+        validationErrors.value.push("La descripción es requerida");
+    if (!price.value) validationErrors.value.push("El precio es requerido");
+    if (!category_id.value)
+        validationErrors.value.push("La categoría es requerida");
+    if (!gender.value) validationErrors.value.push("El género es requerido");
     if (!main_image.value && !editMode.value)
-        validationErrors.value.push("Main image is required");
+        validationErrors.value.push("La imagen principal es requerida");
+
+    // Validación de tallas
+    if (sizesWithStock.value.length === 0) {
+        validationErrors.value.push("Selecciona al menos una talla");
+    } else {
+        for (const size of sizesWithStock.value) {
+            if (size.stock === "" || size.stock === null) {
+                validationErrors.value.push(
+                    `El stock para la talla ${getSizeName(
+                        size.size_id
+                    )} es requerido`
+                );
+                break;
+            }
+            if (size.stock < 0) {
+                validationErrors.value.push(
+                    `El stock para la talla ${getSizeName(
+                        size.size_id
+                    )} no puede ser negativo`
+                );
+                break;
+            }
+        }
+    }
 
     if (validationErrors.value.length > 0) {
         validationModalVisible.value = true;
@@ -175,12 +205,16 @@ const addProduct = async () => {
     formData.append("name", name.value);
     formData.append("description", description.value);
     formData.append("price", price.value);
-    formData.append("stock", stock.value);
     formData.append("category_id", category_id.value);
-    formData.append("size_id", size_id.value);
     formData.append("gender", gender.value);
     formData.append("color", color.value);
     formData.append("brand", brand.value);
+
+    // Añadir tallas con stock
+    sizesWithStock.value.forEach((size, index) => {
+        formData.append(`sizes[${index}][size_id]`, size.size_id);
+        formData.append(`sizes[${index}][stock]`, size.stock);
+    });
 
     if (main_image.value) {
         formData.append("main_image", main_image.value);
@@ -192,14 +226,18 @@ const addProduct = async () => {
         });
     }
 
-    await router.post(route("admin.products.store"), formData, {
-        onSuccess: () => {
-            dialogVisible.value = false;
-            resetFormData();
-            activeDropdown.value = null; // Cerrar dropdown después de agregar
-        },
-        headers: { "Content-Type": "multipart/form-data" },
-    });
+    try {
+        await router.post(route("admin.products.store"), formData, {
+            onSuccess: () => {
+                dialogVisible.value = false;
+                resetFormData();
+                activeDropdown.value = null;
+            },
+            headers: { "Content-Type": "multipart/form-data" },
+        });
+    } catch (error) {
+        console.error("Error creating product:", error);
+    }
 };
 
 // Update product
@@ -210,13 +248,17 @@ const updateProduct = async () => {
     formData.append("name", name.value);
     formData.append("description", description.value);
     formData.append("price", price.value);
-    formData.append("stock", stock.value);
     formData.append("category_id", category_id.value);
-    formData.append("size_id", size_id.value);
     formData.append("gender", gender.value);
     formData.append("color", color.value);
     formData.append("brand", brand.value);
-    formData.append("_method", "POST");
+    formData.append("_method", "POST"); // Cambiado a PUT
+
+    // Añadir tallas con stock
+    sizesWithStock.value.forEach((size, index) => {
+        formData.append(`sizes[${index}][size_id]`, size.size_id);
+        formData.append(`sizes[${index}][stock]`, size.stock);
+    });
 
     if (main_image.value) {
         formData.append("main_image", main_image.value);
@@ -228,14 +270,18 @@ const updateProduct = async () => {
         });
     }
 
-    await router.post(route("admin.products.update", id.value), formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-        onSuccess: () => {
-            dialogVisible.value = false;
-            resetFormData();
-            activeDropdown.value = null; // Cerrar dropdown después de actualizar
-        },
-    });
+    try {
+        await router.post(route("admin.products.update", id.value), formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+            onSuccess: () => {
+                dialogVisible.value = false;
+                resetFormData();
+                activeDropdown.value = null;
+            },
+        });
+    } catch (error) {
+        console.error("Error updating product:", error);
+    }
 };
 
 // Delete image
@@ -291,52 +337,68 @@ const openDeleteAllModal = () => {
 // Confirm deletion
 const confirmDelete = async () => {
     if (deleteAllMode.value) {
-        await router.post(route("admin.products.delete-all"), {}, {
-            onSuccess: () => {
-                selectedProducts.value = [];
-                selectAll.value = false;
-                showCheckboxes.value = false;
-                showDeleteModal.value = false;
-                deleteAllMode.value = false;
-                showSuccessMessage.value = true;
-                setTimeout(() => (showSuccessMessage.value = false), 3000);
-                router.reload({ only: ["products"] });
-                activeDropdown.value = null; // Cerrar dropdown después de eliminar
-            },
-        });
+        await router.post(
+            route("admin.products.delete-all"),
+            {},
+            {
+                onSuccess: () => {
+                    selectedProducts.value = [];
+                    selectAll.value = false;
+                    showCheckboxes.value = false;
+                    showDeleteModal.value = false;
+                    deleteAllMode.value = false;
+                    showSuccessMessage.value = true;
+                    setTimeout(() => (showSuccessMessage.value = false), 3000);
+                    router.reload({ only: ["products"] });
+                    activeDropdown.value = null; // Cerrar dropdown después de eliminar
+                },
+            }
+        );
     } else {
         if (selectedProducts.value.length === 0) {
             showDeleteModal.value = false;
             return;
         }
-        await router.post(route("admin.products.delete-multiple"), { ids: selectedProducts.value }, {
-            onSuccess: () => {
-                selectedProducts.value = [];
-                selectAll.value = false;
-                showCheckboxes.value = false;
-                showDeleteModal.value = false;
-                showSuccessMessage.value = true;
-                setTimeout(() => (showSuccessMessage.value = false), 3000);
-                router.reload({ only: ["products"] });
-                activeDropdown.value = null; // Cerrar dropdown después de eliminar
-            },
-        });
+        await router.post(
+            route("admin.products.delete-multiple"),
+            { ids: selectedProducts.value },
+            {
+                onSuccess: () => {
+                    selectedProducts.value = [];
+                    selectAll.value = false;
+                    showCheckboxes.value = false;
+                    showDeleteModal.value = false;
+                    showSuccessMessage.value = true;
+                    setTimeout(() => (showSuccessMessage.value = false), 3000);
+                    router.reload({ only: ["products"] });
+                    activeDropdown.value = null; // Cerrar dropdown después de eliminar
+                },
+            }
+        );
     }
 };
 
 // Toggle publish status
 const togglePublish = async (productId) => {
-    await router.post(route("admin.products.toggle-publish", productId), {}, {
-        onSuccess: () => {
-            router.reload({ only: ["products"] });
-            activeDropdown.value = null; // Cerrar dropdown después de cambiar el estado
-        },
-    });
+    await router.post(
+        route("admin.products.toggle-publish", productId),
+        {},
+        {
+            onSuccess: () => {
+                router.reload({ only: ["products"] });
+                activeDropdown.value = null; // Cerrar dropdown después de cambiar el estado
+            },
+        }
+    );
 };
 
 // Search
 const debouncedSearch = debounce(() => {
-    router.get(route("admin.products.index"), { search: searchQuery.value }, { preserveState: true, replace: true });
+    router.get(
+        route("admin.products.index"),
+        { search: searchQuery.value },
+        { preserveState: true, replace: true }
+    );
 }, 300);
 
 const handleClose = (done) => {
@@ -373,7 +435,11 @@ const pages = computed(() => {
 });
 
 function goToPage(page) {
-    router.get(route("admin.products.index"), { page }, { preserveState: true, replace: true });
+    router.get(
+        route("admin.products.index"),
+        { page },
+        { preserveState: true, replace: true }
+    );
     activeDropdown.value = null; // Cerrar dropdown al cambiar de página
 }
 
@@ -398,17 +464,26 @@ onUnmounted(() => {
     document.removeEventListener("click", closeDropdownsOnOutsideClick);
 });
 
-watch(() => props.products.current_page, () => {
-    activeDropdown.value = null; // Cerrar dropdown al cambiar de página
-});
+watch(
+    () => props.products.current_page,
+    () => {
+        activeDropdown.value = null; // Cerrar dropdown al cambiar de página
+    }
+);
 
-watch(() => searchQuery.value, () => {
-    activeDropdown.value = null; // Cerrar dropdown al buscar
-});
+watch(
+    () => searchQuery.value,
+    () => {
+        activeDropdown.value = null; // Cerrar dropdown al buscar
+    }
+);
 
 // Cerrar dropdowns al hacer clic fuera
 const closeDropdownsOnOutsideClick = (e) => {
-    if (!e.target.closest('[id^="action-button-"]') && !e.target.closest('[id^="dropdown-"]')) {
+    if (
+        !e.target.closest('[id^="action-button-"]') &&
+        !e.target.closest('[id^="dropdown-"]')
+    ) {
         activeDropdown.value = null;
     }
 };
@@ -423,37 +498,61 @@ onUnmounted(() => {
 });
 
 // Resetear dropdown al cambiar de página o buscar
-watch(() => props.products.current_page, () => {
-    activeDropdown.value = null;
-});
+watch(
+    () => props.products.current_page,
+    () => {
+        activeDropdown.value = null;
+    }
+);
 
-watch(() => searchQuery.value, () => {
-    activeDropdown.value = null;
-});
+watch(
+    () => searchQuery.value,
+    () => {
+        activeDropdown.value = null;
+    }
+);
 
+const handleSizeSelectionChange = (selectedIds) => {
+    sizesWithStock.value = selectedIds.map((id) => {
+        const existing = sizesWithStock.value.find((s) => s.size_id === id);
+        return existing || { size_id: id, stock: "" };
+    });
+};
 
+const getSizeName = (id) => {
+    const size = props.sizes.find((s) => s.id === id);
+    return size ? size.name : "Desconocido";
+};
 </script>
 
 <template>
     <section class="p-3 sm:p-5">
         <!-- Validation Modal -->
-<el-dialog
-    v-model="validationModalVisible"
-    title="Errores de Validación"
-    width="30%"
->
-    <div class="text-sm text-gray-600 dark:text-gray-400">
-        <p>Por favor complete todos los campos requeridos:</p>
-        <ul class="mt-2">
-            <li v-for="error in validationErrors" :key="error" class="list-disc ml-5">{{ error }}</li>
-        </ul>
-    </div>
-    <template #footer>
-        <span class="dialog-footer">
-            <el-button @click="validationModalVisible = false">Cerrar</el-button>
-        </span>
-    </template>
-</el-dialog>
+        <el-dialog
+            v-model="validationModalVisible"
+            title="Errores de Validación"
+            width="30%"
+        >
+            <div class="text-sm text-gray-600 dark:text-gray-400">
+                <p>Por favor complete todos los campos requeridos:</p>
+                <ul class="mt-2">
+                    <li
+                        v-for="error in validationErrors"
+                        :key="error"
+                        class="list-disc ml-5"
+                    >
+                        {{ error }}
+                    </li>
+                </ul>
+            </div>
+            <template #footer>
+                <span class="dialog-footer">
+                    <el-button @click="validationModalVisible = false"
+                        >Cerrar</el-button
+                    >
+                </span>
+            </template>
+        </el-dialog>
 
         <!-- Dialog for adding/editing product -->
         <el-dialog
@@ -462,11 +561,16 @@ watch(() => searchQuery.value, () => {
             width="50%"
             :before-close="handleClose"
         >
-            <form @submit.prevent="editMode ? updateProduct() : addProduct()" class="grid grid-cols-2 gap-6">
+            <form
+                @submit.prevent="editMode ? updateProduct() : addProduct()"
+                class="grid grid-cols-2 gap-6"
+            >
                 <!-- Left Column -->
                 <div>
                     <div class="mb-4">
-                        <label class="block text-gray-700 font-medium mb-1">Name *</label>
+                        <label class="block text-gray-700 font-medium mb-1"
+                            >Name *</label
+                        >
                         <input
                             v-model="name"
                             type="text"
@@ -475,7 +579,9 @@ watch(() => searchQuery.value, () => {
                         />
                     </div>
                     <div class="mb-4">
-                        <label class="block text-gray-700 font-medium mb-1">Description *</label>
+                        <label class="block text-gray-700 font-medium mb-1"
+                            >Description *</label
+                        >
                         <textarea
                             v-model="description"
                             class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-24"
@@ -483,7 +589,9 @@ watch(() => searchQuery.value, () => {
                         ></textarea>
                     </div>
                     <div class="mb-4">
-                        <label class="block text-gray-700 font-medium mb-1">Price *</label>
+                        <label class="block text-gray-700 font-medium mb-1"
+                            >Price *</label
+                        >
                         <input
                             v-model.number="price"
                             type="number"
@@ -492,7 +600,7 @@ watch(() => searchQuery.value, () => {
                             required
                         />
                     </div>
-                    <div class="mb-4">
+                    <!-- <div class="mb-4">
                         <label class="block text-gray-700 font-medium mb-1">Stock *</label>
                         <input
                             v-model.number="stock"
@@ -500,16 +608,22 @@ watch(() => searchQuery.value, () => {
                             class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             required
                         />
-                    </div>
+                    </div> -->
                     <div class="mb-4">
-                        <label class="block text-gray-700 font-medium mb-1">Category *</label>
+                        <label class="block text-gray-700 font-medium mb-1"
+                            >Category *</label
+                        >
                         <select
                             v-model.number="category_id"
                             class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             required
                         >
                             <option value="">Select a category</option>
-                            <option v-for="category in categories" :key="category.id" :value="category.id">
+                            <option
+                                v-for="category in categories"
+                                :key="category.id"
+                                :value="category.id"
+                            >
                                 {{ category.name }}
                             </option>
                         </select>
@@ -519,33 +633,64 @@ watch(() => searchQuery.value, () => {
                 <!-- Right Column -->
                 <div>
                     <div class="mb-4">
-                        <label class="block text-gray-700 font-medium mb-1">Size *</label>
-                        <select
-                            v-model.number="size_id"
-                            class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            required
+                        <label class="block text-gray-700 font-medium mb-1"
+                            >Tallas y stock *</label
                         >
-                            <option value="">Select a size</option>
-                            <option v-for="size in sizes" :key="size.id" :value="size.id">
-                                {{ size.name }}
-                            </option>
-                        </select>
+                        <el-form-item>
+                            <el-select
+                                v-model="selectedSizeIds"
+                                multiple
+                                filterable
+                                placeholder="Selecciona tallas"
+                                class="w-full"
+                                @change="handleSizeSelectionChange"
+                            >
+                                <el-option
+                                    v-for="size in sizes"
+                                    :key="size.id"
+                                    :label="size.name"
+                                    :value="size.id"
+                                />
+                            </el-select>
+
+                            <div
+                                v-for="item in sizesWithStock"
+                                :key="item.size_id"
+                                class="flex items-center gap-4 mt-2"
+                            >
+                                <el-input
+                                    v-model.number="item.stock"
+                                    type="number"
+                                    class="flex-1"
+                                    placeholder="Stock para la talla"
+                                    :prefix-icon="Plus"
+                                />
+                                <small class="text-gray-600">{{
+                                    getSizeName(item.size_id)
+                                }}</small>
+                            </div>
+                        </el-form-item>
                     </div>
+
                     <div class="mb-4">
-                        <label class="block text-gray-700 font-medium mb-1">Gender *</label>
+                        <label class="block text-gray-700 font-medium mb-1"
+                            >Gender *</label
+                        >
                         <select
                             v-model="gender"
                             class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             required
                         >
-                            <option value="">Select gender</option>
-                            <option value="male">Male</option>
-                            <option value="female">Female</option>
+                            <option value="">Seleccionar género</option>
+                            <option value="male">Masculino</option>
+                            <option value="female">Femenino</option>
                             <option value="unisex">Unisex</option>
                         </select>
                     </div>
                     <div class="mb-4">
-                        <label class="block text-gray-700 font-medium mb-1">Color</label>
+                        <label class="block text-gray-700 font-medium mb-1"
+                            >Color</label
+                        >
                         <input
                             v-model="color"
                             type="text"
@@ -554,7 +699,9 @@ watch(() => searchQuery.value, () => {
                         />
                     </div>
                     <div class="mb-4">
-                        <label class="block text-gray-700 font-medium mb-1">Brand</label>
+                        <label class="block text-gray-700 font-medium mb-1"
+                            >Brand</label
+                        >
                         <input
                             v-model="brand"
                             type="text"
@@ -563,11 +710,15 @@ watch(() => searchQuery.value, () => {
                         />
                     </div>
                     <div class="mb-4">
-                        <label class="block text-gray-700 font-medium mb-1">Main Image *</label>
+                        <label class="block text-gray-700 font-medium mb-1"
+                            >Main Image *</label
+                        >
                         <label
                             class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-blue-300 rounded-lg bg-white hover:bg-gray-50 transition-colors cursor-pointer"
                         >
-                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                            <div
+                                class="flex flex-col items-center justify-center pt-5 pb-6"
+                            >
                                 <svg
                                     class="w-8 h-8 text-blue-500"
                                     aria-hidden="true"
@@ -583,8 +734,12 @@ watch(() => searchQuery.value, () => {
                                         d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
                                     />
                                 </svg>
-                                <p class="mt-2 text-sm text-gray-600">Click to upload or drag and drop</p>
-                                <p class="text-xs text-gray-500">PNG, JPG (MAX. 2MB)</p>
+                                <p class="mt-2 text-sm text-gray-600">
+                                    Click to upload or drag and drop
+                                </p>
+                                <p class="text-xs text-gray-500">
+                                    PNG, JPG (MAX. 2MB)
+                                </p>
                             </div>
                             <input
                                 type="file"
@@ -605,11 +760,15 @@ watch(() => searchQuery.value, () => {
 
                 <!-- Additional Images (spanning both columns) -->
                 <div class="col-span-2 mb-4">
-                    <label class="block text-gray-700 font-medium mb-1">Additional Images</label>
+                    <label class="block text-gray-700 font-medium mb-1"
+                        >Additional Images</label
+                    >
                     <label
                         class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-blue-300 rounded-lg bg-white hover:bg-gray-50 transition-colors cursor-pointer"
                     >
-                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                        <div
+                            class="flex flex-col items-center justify-center pt-5 pb-6"
+                        >
                             <svg
                                 class="w-8 h-8 text-blue-500"
                                 aria-hidden="true"
@@ -625,8 +784,12 @@ watch(() => searchQuery.value, () => {
                                     d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
                                 />
                             </svg>
-                            <p class="mt-2 text-sm text-gray-600">Click to upload or drag and drop</p>
-                            <p class="text-xs text-gray-500">PNG, JPG (MAX. 2MB)</p>
+                            <p class="mt-2 text-sm text-gray-600">
+                                Click to upload or drag and drop
+                            </p>
+                            <p class="text-xs text-gray-500">
+                                PNG, JPG (MAX. 2MB)
+                            </p>
                         </div>
                         <input
                             type="file"
@@ -637,8 +800,15 @@ watch(() => searchQuery.value, () => {
                             class="hidden"
                         />
                     </label>
-                    <div v-if="additionalImagesPreviews.length" class="mt-2 flex flex-wrap gap-4">
-                        <div v-for="(preview, index) in additionalImagesPreviews" :key="index" class="relative">
+                    <div
+                        v-if="additionalImagesPreviews.length"
+                        class="mt-2 flex flex-wrap gap-4"
+                    >
+                        <div
+                            v-for="(preview, index) in additionalImagesPreviews"
+                            :key="index"
+                            class="relative"
+                        >
                             <img
                                 :src="preview"
                                 alt="Additional Image Preview"
@@ -646,7 +816,10 @@ watch(() => searchQuery.value, () => {
                             />
                             <button
                                 type="button"
-                                @click="additionalImagesPreviews.splice(index, 1); images.value.splice(index, 1);"
+                                @click="
+                                    additionalImagesPreviews.splice(index, 1);
+                                    images.value.splice(index, 1);
+                                "
                                 class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600"
                             >
                                 ×
@@ -656,11 +829,23 @@ watch(() => searchQuery.value, () => {
                 </div>
 
                 <!-- Existing Images (for edit mode) -->
-                <div class="col-span-2 mb-4" v-if="editMode && productImages.length">
-                    <label class="block text-gray-700 font-medium mb-1">Current Images</label>
+                <div
+                    class="col-span-2 mb-4"
+                    v-if="editMode && productImages.length"
+                >
+                    <label class="block text-gray-700 font-medium mb-1"
+                        >Current Images</label
+                    >
                     <div class="flex flex-wrap gap-4">
-                        <div v-for="(image, index) in productImages" :key="index" class="relative">
-                            <img :src="image.url" class="w-32 h-32 object-cover rounded-lg shadow-md" />
+                        <div
+                            v-for="(image, index) in productImages"
+                            :key="index"
+                            class="relative"
+                        >
+                            <img
+                                :src="image.url"
+                                class="w-32 h-32 object-cover rounded-lg shadow-md"
+                            />
                             <button
                                 type="button"
                                 @click="handleRemove(image, productImages)"
@@ -687,16 +872,31 @@ watch(() => searchQuery.value, () => {
         <!-- Delete Confirmation Modal -->
         <el-dialog
             v-model="showDeleteModal"
-            :title="deleteAllMode ? 'Eliminar todos los productos' : `Eliminar ${selectedProducts.length} producto${selectedProducts.length > 1 ? 's' : ''}`"
+            :title="
+                deleteAllMode
+                    ? 'Eliminar todos los productos'
+                    : `Eliminar ${selectedProducts.length} producto${
+                          selectedProducts.length > 1 ? 's' : ''
+                      }`
+            "
             width="30%"
         >
             <p class="text-sm text-gray-600 dark:text-gray-400">
-                ¿Estás seguro de que deseas eliminar {{ deleteAllMode ? 'todos los productos' : 'los productos seleccionados' }}? Esta acción no se puede deshacer.
+                ¿Estás seguro de que deseas eliminar
+                {{
+                    deleteAllMode
+                        ? "todos los productos"
+                        : "los productos seleccionados"
+                }}? Esta acción no se puede deshacer.
             </p>
             <template #footer>
                 <span class="dialog-footer">
-                    <el-button @click="showDeleteModal = false">Cancelar</el-button>
-                    <el-button type="danger" @click="confirmDelete">Eliminar</el-button>
+                    <el-button @click="showDeleteModal = false"
+                        >Cancelar</el-button
+                    >
+                    <el-button type="danger" @click="confirmDelete"
+                        >Eliminar</el-button
+                    >
                 </span>
             </template>
         </el-dialog>
@@ -713,21 +913,32 @@ watch(() => searchQuery.value, () => {
 
         <!-- Main Content -->
         <div class="mx-auto max-w-screen-xl px-4 lg:px-12">
-            <div class="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden">
-                <div class="flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4">
+            <div
+                class="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden"
+            >
+                <div
+                    class="flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4"
+                >
                     <transition name="fade">
                         <button
                             v-if="selectedProducts.length > 0 && showCheckboxes"
                             @click="openDeleteModal"
                             class="fixed bottom-4 right-4 px-4 py-2 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 focus:outline-none focus:ring-4 focus:ring-red-300 flex items-center space-x-2 z-50"
                         >
-                            <span>Eliminar {{ selectedProducts.length }} seleccionado{{ selectedProducts.length > 1 ? 's' : '' }}</span>
+                            <span
+                                >Eliminar
+                                {{ selectedProducts.length }} seleccionado{{
+                                    selectedProducts.length > 1 ? "s" : ""
+                                }}</span
+                            >
                         </button>
                     </transition>
 
                     <div class="w-full md:w-1/2">
                         <div class="relative w-full">
-                            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                            <div
+                                class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
+                            >
                                 <svg
                                     aria-hidden="true"
                                     class="w-5 h-5 text-gray-500 dark:text-gray-400"
@@ -752,7 +963,9 @@ watch(() => searchQuery.value, () => {
                         </div>
                     </div>
 
-                    <div class="w-full md:w-auto flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0">
+                    <div
+                        class="w-full md:w-auto flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0"
+                    >
                         <button
                             type="button"
                             @click="openAddModal"
@@ -773,7 +986,9 @@ watch(() => searchQuery.value, () => {
                             </svg>
                             Add product
                         </button>
-                        <div class="flex items-center space-x-3 w-full md:w-auto">
+                        <div
+                            class="flex items-center space-x-3 w-full md:w-auto"
+                        >
                             <button
                                 id="actionsDropdownButton"
                                 data-dropdown-toggle="actionsDropdown"
@@ -805,7 +1020,11 @@ watch(() => searchQuery.value, () => {
                                         @click.prevent="toggleCheckboxes"
                                         class="block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white"
                                     >
-                                        {{ showCheckboxes ? "Ocultar selección" : "Eliminar seleccionados" }}
+                                        {{
+                                            showCheckboxes
+                                                ? "Ocultar selección"
+                                                : "Eliminar seleccionados"
+                                        }}
                                     </a>
                                     <a
                                         href="#"
@@ -820,10 +1039,18 @@ watch(() => searchQuery.value, () => {
                     </div>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                    <table
+                        class="w-full text-sm text-left text-gray-500 dark:text-gray-400"
+                    >
+                        <thead
+                            class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400"
+                        >
                             <tr>
-                                <th scope="col" class="px-4 py-3" v-if="showCheckboxes">
+                                <th
+                                    scope="col"
+                                    class="px-4 py-3"
+                                    v-if="showCheckboxes"
+                                >
                                     <input
                                         type="checkbox"
                                         v-model="selectAll"
@@ -844,7 +1071,11 @@ watch(() => searchQuery.value, () => {
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="(product, index) in productList" :key="product.id" class="border-b dark:border-gray-700">
+                            <tr
+                                v-for="(product, index) in productList"
+                                :key="product.id"
+                                class="border-b dark:border-gray-700"
+                            >
                                 <td class="px-4 py-3" v-if="showCheckboxes">
                                     <input
                                         type="checkbox"
@@ -853,27 +1084,31 @@ watch(() => searchQuery.value, () => {
                                         class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
                                     />
                                 </td>
-                                <th scope="row" class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                <th
+                                    scope="row"
+                                    class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white"
+                                >
                                     {{ product.name }}
                                 </th>
-                                <td class="px-4 py-3">{{ product.category?.name || "N/A" }}</td>
+                                <td class="px-4 py-3">
+                                    {{ product.category?.name || "N/A" }}
+                                </td>
                                 <td class="px-4 py-3">{{ product.brand }}</td>
                                 <td class="px-4 py-3">{{ product.stock }}</td>
                                 <td class="px-4 py-3">{{ product.price }} €</td>
                                 <td class="px-4 py-3">
-                                    <span
-                                        v-if="product.stock > 0"
-                                        class="bg-green-100 text-green-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300"
-                                    >
-                                        En stock
-                                    </span>
-                                    <span
-                                        v-else
-                                        class="bg-red-100 text-red-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-red-900 dark:text-red-300"
-                                    >
-                                        Sin stock
-                                    </span>
+                                    <div class="flex flex-wrap gap-1">
+                                        <span
+                                            v-for="size in product.sizes"
+                                            :key="size.id"
+                                            class="text-xs px-2 py-1 bg-gray-100 rounded"
+                                        >
+                                            {{ size.name }}:
+                                            {{ size.pivot.stock }}
+                                        </span>
+                                    </div>
                                 </td>
+
                                 <td class="px-4 py-3">
                                     <button
                                         @click="togglePublish(product.id)"
@@ -885,59 +1120,74 @@ watch(() => searchQuery.value, () => {
                                                 !product.published,
                                         }"
                                     >
-                                        {{ product.published ? "Publicado" : "No publicado" }}
+                                        {{
+                                            product.published
+                                                ? "Publicado"
+                                                : "No publicado"
+                                        }}
                                     </button>
                                 </td>
-<td class="px-4 py-3 flex items-center justify-end relative">
-    <button
-        :id="`action-button-${product.id}`"
-        class="flex items-center justify-center w-8 h-8 text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-100 rounded-full hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200 focus:outline-none"
-        @click.stop="toggleDropdown(product.id)"
-        type="button"
-    >
-        <svg
-            class="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-        >
-            <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 6v.01M12 12v.01M12 18v.01"
-            />
-        </svg>
-    </button>
+                                <td
+                                    class="px-4 py-3 flex items-center justify-end relative"
+                                >
+                                    <button
+                                        :id="`action-button-${product.id}`"
+                                        class="flex items-center justify-center w-8 h-8 text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-100 rounded-full hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200 focus:outline-none"
+                                        @click.stop="toggleDropdown(product.id)"
+                                        type="button"
+                                    >
+                                        <svg
+                                            class="w-5 h-5"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                        >
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                stroke-width="2"
+                                                d="M12 6v.01M12 12v.01M12 18v.01"
+                                            />
+                                        </svg>
+                                    </button>
 
-    <div
-        :id="`dropdown-${product.id}`"
-        class="dropdown-menu absolute right-0 top-10 z-10 w-40 bg-white rounded-xl shadow-lg dark:bg-gray-800 dark:shadow-gray-900 overflow-hidden"
-        :class="{'hidden': activeDropdown !== product.id}"
-    >
-        <ul class="text-sm">
-            <li>
-                <a
-                    href="#"
-                    @click.prevent="openEditModal(product)"
-                    class="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 dark:text-gray-200 dark:hover:bg-gray-700 dark:hover:text-blue-400 transition-colors duration-150"
-                >
-                    Editar
-                </a>
-            </li>
-            <li>
-                <a
-                    href="#"
-                    @click.prevent="deleteProduct(product.id)"
-                    class="block px-4 py-2 text-gray-700 hover:bg-red-50 hover:text-red-600 dark:text-gray-200 dark:hover:bg-gray-700 dark:hover:text-red-400 transition-colors duration-150"
-                >
-                    Eliminar
-                </a>
-            </li>
-        </ul>
-    </div>
-</td>
+                                    <div
+                                        :id="`dropdown-${product.id}`"
+                                        class="dropdown-menu absolute right-0 top-10 z-10 w-40 bg-white rounded-xl shadow-lg dark:bg-gray-800 dark:shadow-gray-900 overflow-hidden"
+                                        :class="{
+                                            hidden:
+                                                activeDropdown !== product.id,
+                                        }"
+                                    >
+                                        <ul class="text-sm">
+                                            <li>
+                                                <a
+                                                    href="#"
+                                                    @click.prevent="
+                                                        openEditModal(product)
+                                                    "
+                                                    class="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 dark:text-gray-200 dark:hover:bg-gray-700 dark:hover:text-blue-400 transition-colors duration-150"
+                                                >
+                                                    Editar
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a
+                                                    href="#"
+                                                    @click.prevent="
+                                                        deleteProduct(
+                                                            product.id
+                                                        )
+                                                    "
+                                                    class="block px-4 py-2 text-gray-700 hover:bg-red-50 hover:text-red-600 dark:text-gray-200 dark:hover:bg-gray-700 dark:hover:text-red-400 transition-colors duration-150"
+                                                >
+                                                    Eliminar
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -946,11 +1196,19 @@ watch(() => searchQuery.value, () => {
                     class="flex flex-col md:flex-row justify-between items-start md:items-center space-y-3 md:space-y-0 p-4"
                     aria-label="Navegación de tabla"
                 >
-                    <span class="text-sm font-normal text-gray-500 dark:text-gray-400">
+                    <span
+                        class="text-sm font-normal text-gray-500 dark:text-gray-400"
+                    >
                         Mostrando
-                        <span class="font-semibold text-gray-900 dark:text-white">{{ from }}-{{ to }}</span>
+                        <span
+                            class="font-semibold text-gray-900 dark:text-white"
+                            >{{ from }}-{{ to }}</span
+                        >
                         de
-                        <span class="font-semibold text-gray-900 dark:text-white">{{ total }}</span>
+                        <span
+                            class="font-semibold text-gray-900 dark:text-white"
+                            >{{ total }}</span
+                        >
                     </span>
                     <ul class="inline-flex items-stretch -space-x-px">
                         <li>

@@ -14,9 +14,7 @@ class CreateProductsTable extends Migration
             $table->string('slug')->unique(); // Added slug column
             $table->text('description')->nullable();
             $table->decimal('price', 8, 2);
-            $table->integer('stock');
             $table->foreignId('category_id')->constrained()->onDelete('cascade');
-            $table->foreignId('size_id')->constrained()->onDelete('cascade');
             $table->enum('gender', ['male', 'female', 'unisex'])->default('unisex');
             $table->string('main_image')->nullable(); 
             $table->json('images')->nullable(); 

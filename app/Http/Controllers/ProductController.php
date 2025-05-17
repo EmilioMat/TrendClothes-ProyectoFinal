@@ -14,9 +14,9 @@ use Inertia\Inertia;
 class ProductController extends Controller
 {
     // Método para el panel de administración
-public function adminIndex(Request $request)
+    public function adminIndex(Request $request)
     {
-        $query = Product::with('category', 'size', 'product_images')
+        $query = Product::with(['category', 'sizes', 'product_images'])
             ->orderBy('created_at', 'desc');
 
         if ($request->has('search') && !empty($request->search)) {
@@ -24,7 +24,7 @@ public function adminIndex(Request $request)
         }
 
         $products = $query->paginate(6);
-        
+
         $categories = Category::all();
         $sizes = Size::all();
 
@@ -75,88 +75,105 @@ public function store(Request $request)
         'name' => 'required|string|max:255',
         'description' => 'nullable|string',
         'price' => 'required|numeric|min:0',
-        'stock' => 'required|integer|min:0',
         'category_id' => 'required|exists:categories,id',
-        'size_id' => 'required|exists:sizes,id',
         'gender' => 'required|in:male,female,unisex',
-        'color' => 'nullable|string|max:255',
-        'brand' => 'nullable|string|max:255',
-        'main_image' => 'required|image|max:2048',
-        'product_images' => 'nullable|array', 
-        'product_images.*' => 'image|max:2048',
+        'color' => 'nullable|string|max:100',
+        'brand' => 'nullable|string|max:100',
+        'main_image' => 'required|image',
+        'product_images.*' => 'nullable|image',
+        'sizes' => 'required|array|min:1',
+        'sizes.*.size_id' => 'required|exists:sizes,id',
+        'sizes.*.stock' => 'required|integer|min:0'
     ]);
 
-    // Guardar imagen principal
-    $mainImagePath = $request->file('main_image')->store('products', 'public');
-
-    $product = Product::create([
-        'name' => $validated['name'],
-        'description' => $validated['description'],
-        'price' => $validated['price'],
-        'stock' => $validated['stock'],
-        'category_id' => $validated['category_id'],
-        'size_id' => $validated['size_id'],
-        'gender' => $validated['gender'],
-        'color' => $validated['color'],
-        'brand' => $validated['brand'],
-        'main_image' => $mainImagePath,
+    // Guardar el producto
+    $productData = $request->only([
+        'name', 'description', 'price', 'category_id', 
+        'gender', 'color', 'brand'
     ]);
+    
+    // Manejar la imagen principal
+    if ($request->hasFile('main_image')) {
+        $path = $request->file('main_image')->store('products', 'public');
+        $productData['main_image'] = $path;
+    }
+
+    $product = Product::create($productData);
 
     // Guardar imágenes adicionales
     if ($request->hasFile('product_images')) {
         foreach ($request->file('product_images') as $image) {
-            $path = $image->store('products', 'public');
+            $path = $image->store('product_images', 'public');
             $product->product_images()->create(['image_path' => $path]);
         }
     }
 
-    return redirect()->route('admin.products.index')->with('success', 'Producto creado correctamente.');
+    // Guardar tallas con stock
+    $sizesToAttach = [];
+    foreach ($request->input('sizes') as $size) {
+        $sizesToAttach[$size['size_id']] = ['stock' => $size['stock']];
+    }
+    $product->sizes()->sync($sizesToAttach);
+
+    return redirect()->route('admin.products.index')
+        ->with('success', 'Producto creado exitosamente');
 }
 
-    // Añade estos métodos nuevos
-    public function update(Request $request, $id)
-    {
-        $product = Product::findOrFail($id);
+public function update(Request $request, $id)
+{
+    $product = Product::findOrFail($id);
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'price' => 'required|numeric|min:0',
-            'stock' => 'required|integer|min:0',
-            'category_id' => 'required|exists:categories,id',
-            'size_id' => 'required|exists:sizes,id',
-            'gender' => 'required|in:male,female,unisex',
-            'color' => 'nullable|string|max:255',
-            'brand' => 'nullable|string|max:255',
-            'main_image' => 'nullable|image|max:2048',
-            'product_images' => 'nullable|array',
-            'product_images.*' => 'image|max:2048',
-        ]);
+    $validated = $request->validate([
+        'name' => 'required|string|max:255',
+        'description' => 'nullable|string',
+        'price' => 'required|numeric|min:0',
+        'category_id' => 'required|exists:categories,id',
+        'gender' => 'required|in:male,female,unisex',
+        'color' => 'nullable|string|max:100',
+        'brand' => 'nullable|string|max:100',
+        'main_image' => 'nullable|image',
+        'product_images.*' => 'nullable|image',
+        'sizes' => 'required|array',
+        'sizes.*.size_id' => 'required|exists:sizes,id',
+        'sizes.*.stock' => 'required|integer|min:0'
+    ]);
 
-        // Actualiza los campos básicos
-        $product->update($request->except(['main_image', 'product_images']));
+    // Actualizar campos básicos
+    $product->update($request->only([
+        'name', 'description', 'price', 'category_id', 
+        'gender', 'color', 'brand'
+    ]));
 
-        // Manejo de la imagen principal
-        if ($request->hasFile('main_image')) {
-            // Elimina la imagen anterior si existe
-            if ($product->main_image) {
-                Storage::disk('public')->delete($product->main_image);
-            }
-
-            $path = $request->file('main_image')->store('products', 'public');
-            $product->update(['main_image' => $path]);
+    // Actualizar imagen principal si se proporciona
+    if ($request->hasFile('main_image')) {
+        // Eliminar imagen anterior si existe
+        if ($product->main_image) {
+            Storage::delete($product->main_image);
         }
-
-        // Manejo de imágenes adicionales
-        if ($request->hasFile('product_images')) {
-            foreach ($request->file('product_images') as $image) {
-                $path = $image->store('products', 'public');
-                $product->product_images()->create(['image_path' => $path]);
-            }
-        }
-
-        return redirect()->route('admin.products.index')->with('success', 'Product updated successfully.');
+        $path = $request->file('main_image')->store('products', 'public');
+        $product->main_image = $path;
+        $product->save();
     }
+
+    // Manejar imágenes adicionales
+    if ($request->hasFile('product_images')) {
+        foreach ($request->file('product_images') as $image) {
+            $path = $image->store('product_images', 'public');
+            $product->product_images()->create(['image_path' => $path]);
+        }
+    }
+
+    // Sincronizar tallas con stock
+    $sizesToSync = [];
+    foreach ($request->input('sizes') as $size) {
+        $sizesToSync[$size['size_id']] = ['stock' => $size['stock']];
+    }
+    $product->sizes()->sync($sizesToSync);
+
+    return redirect()->route('admin.products.index')
+        ->with('success', 'Producto actualizado exitosamente');
+}
+
 
     public function deleteImage($id)
     {
@@ -172,7 +189,8 @@ public function store(Request $request)
 
     public function show(Product $product)
     {
-        $product->load(['category', 'size', 'product_images']);
+        $product->load(['category', 'sizes', 'product_images']);
+
 
         // Obtener todas las tallas disponibles para productos similares
         $availableSizes = Size::whereHas('products', function ($query) use ($product) {
@@ -189,8 +207,8 @@ public function store(Request $request)
                 'price' => $product->price,
                 'stock' => $product->stock,
                 'gender' => $product->gender,
-                'size' => $product->size->name,
-                'sizes' => $availableSizes ?: [$product->size->name],
+                'size' => optional($product->sizes->first())->name,
+                'sizes' => $availableSizes ?: [optional($product->sizes->first())->name],
                 'category' => $product->category->name,
                 'main_image' => $product->main_image ? Storage::url($product->main_image) : null,
                 'images' => $product->product_images->map(function ($image) {
