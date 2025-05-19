@@ -429,7 +429,7 @@
                             </div>
                         </Link>
 
-                        <!-- Usuarios (solo para admin)
+                        <!-- Usuarios (solo para admin) -->
         <Link
             v-if="$page.props.auth.user && $page.props.auth.user.is_admin"
             :href="route('admin.users.index')"
@@ -449,7 +449,7 @@
             <div class="text-sm text-gray-900 dark:text-white">
                 Usuarios
             </div>
-        </Link> -->
+        </Link>
                     </div>
 
                     <!-- Cerrar Sesión (fuera del grid) -->

@@ -93,7 +93,7 @@ class AdminSizeController extends Controller
     }
 
     // Eliminar todas las tallas
-    public function deleteAll()
+     public function deleteAll()
     {
         // Verificar que no haya tallas con productos
         $sizesWithProducts = Size::whereHas('products')->count();
@@ -103,8 +103,9 @@ class AdminSizeController extends Controller
                 ->with('error', 'No se pueden eliminar todas las tallas porque algunas tienen productos asociados');
         }
 
-        Size::truncate();
+        // Usar delete() en lugar de truncate() para respetar las relaciones
+        Size::whereDoesntHave('products')->delete();
 
-        return redirect()->back()->with('success', 'Todas las tallas eliminadas correctamente');
+        return redirect()->back()->with('success', 'Todas las tallas sin productos asociados eliminadas correctamente');
     }
 }

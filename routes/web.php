@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\AdminCategoryController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\AdminSizeController;
+use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
@@ -29,7 +30,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-     Route::patch('/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
+    Route::patch('/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
 });
 
 // Rutas públicas de productos y carrito
@@ -77,6 +78,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::delete('/sizes/destroy/{id}', [AdminSizeController::class, 'destroy'])->name('admin.sizes.destroy');
     Route::post('/sizes/delete-multiple', [AdminSizeController::class, 'deleteMultiple'])->name('admin.sizes.delete-multiple');
     Route::post('/sizes/delete-all', [AdminSizeController::class, 'deleteAll'])->name('admin.sizes.delete-all');
+
+    Route::get('/users', [AdminUserController::class, 'index'])->name('admin.users.index');
+    Route::post('/users/store', [AdminUserController::class, 'store'])->name('admin.users.store');
+    Route::post('/users/update/{id}', [AdminUserController::class, 'update'])->name('admin.users.update');
+    Route::delete('/users/destroy/{id}', [AdminUserController::class, 'destroy'])->name('admin.users.destroy');
+    Route::delete('/users/delete-multiple', [AdminUserController::class, 'deleteMultiple'])->name('admin.users.delete-multiple');
+    Route::delete('/users/delete-all', [AdminUserController::class, 'deleteAll'])->name('admin.users.delete-all');
 });
 
 require __DIR__ . '/auth.php';
