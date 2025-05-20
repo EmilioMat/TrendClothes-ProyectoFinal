@@ -4,6 +4,8 @@ namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
 use Inertia\Middleware;
+use Illuminate\Support\Facades\Storage;
+
 
 class HandleInertiaRequests extends Middleware
 {
@@ -35,7 +37,8 @@ class HandleInertiaRequests extends Middleware
                     'id' => $request->user()->id,
                     'name' => $request->user()->name,
                     'email' => $request->user()->email,
-                    'is_admin' => $request->user()->is_admin, // Asegúrate de incluir esto
+                    'is_admin' => $request->user()->is_admin,
+                    'avatar' => $request->user()->avatar ? Storage::url($request->user()->avatar) : null,
                 ] : null,
             ],
             'flash' => [

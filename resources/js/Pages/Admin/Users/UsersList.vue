@@ -74,10 +74,14 @@ const pages = computed(() => {
 
 // Métodos de paginación
 function goToPage(page) {
-    router.get(route("admin.users.index"), { page, search: searchQuery.value }, {
-        preserveState: true,
-        replace: true,
-    });
+    router.get(
+        route("admin.users.index"),
+        { page, search: searchQuery.value },
+        {
+            preserveState: true,
+            replace: true,
+        }
+    );
     activeDropdown.value = null;
 }
 
@@ -155,7 +159,10 @@ const saveUser = async () => {
     formData.append("role", form.value.role);
     if (form.value.password) {
         formData.append("password", form.value.password);
-        formData.append("password_confirmation", form.value.password_confirmation);
+        formData.append(
+            "password_confirmation",
+            form.value.password_confirmation
+        );
     }
     if (form.value.avatar instanceof File) {
         formData.append("avatar", form.value.avatar);
@@ -165,7 +172,9 @@ const saveUser = async () => {
     }
     try {
         await router.post(
-            editMode.value ? route("admin.users.update", form.value.id) : route("admin.users.store"),
+            editMode.value
+                ? route("admin.users.update", form.value.id)
+                : route("admin.users.store"),
             formData,
             {
                 preserveScroll: true,
@@ -251,19 +260,26 @@ const confirmDelete = async () => {
     isDeleting.value = true;
     try {
         if (deleteAllMode.value) {
-            await router.delete(route("admin.users.delete-all"), {}, {
-                onSuccess: () => {
-                    selectedUsers.value = [];
-                    selectAll.value = false;
-                    showCheckboxes.value = false;
-                    showSuccessMessage.value = true;
-                    setTimeout(() => (showSuccessMessage.value = false), 3000);
-                    activeDropdown.value = null;
-                },
-                onError: (errors) => {
-                    console.error("Error deleting all users:", errors);
-                },
-            });
+            await router.delete(
+                route("admin.users.delete-all"),
+                {},
+                {
+                    onSuccess: () => {
+                        selectedUsers.value = [];
+                        selectAll.value = false;
+                        showCheckboxes.value = false;
+                        showSuccessMessage.value = true;
+                        setTimeout(
+                            () => (showSuccessMessage.value = false),
+                            3000
+                        );
+                        activeDropdown.value = null;
+                    },
+                    onError: (errors) => {
+                        console.error("Error deleting all users:", errors);
+                    },
+                }
+            );
         } else {
             if (selectedUsers.value.length === 0) {
                 return;
@@ -294,10 +310,14 @@ const confirmDelete = async () => {
 
 // Búsqueda con debounce
 const performSearch = debounce(() => {
-    router.get(route("admin.users.index"), { search: searchQuery.value }, {
-        preserveState: true,
-        replace: true,
-    });
+    router.get(
+        route("admin.users.index"),
+        { search: searchQuery.value },
+        {
+            preserveState: true,
+            replace: true,
+        }
+    );
     activeDropdown.value = null;
 }, 300);
 
@@ -310,17 +330,26 @@ onUnmounted(() => {
     document.removeEventListener("click", closeDropdownsOnOutsideClick);
 });
 
-watch(() => props.users.current_page, () => {
-    activeDropdown.value = null;
-});
+watch(
+    () => props.users.current_page,
+    () => {
+        activeDropdown.value = null;
+    }
+);
 
-watch(() => searchQuery.value, () => {
-    activeDropdown.value = null;
-});
+watch(
+    () => searchQuery.value,
+    () => {
+        activeDropdown.value = null;
+    }
+);
 
 // Cerrar dropdowns al hacer clic fuera
 const closeDropdownsOnOutsideClick = (e) => {
-    if (!e.target.closest('[id^="action-button-"]') && !e.target.closest('[id^="dropdown-"]')) {
+    if (
+        !e.target.closest('[id^="action-button-"]') &&
+        !e.target.closest('[id^="dropdown-"]')
+    ) {
         activeDropdown.value = null;
     }
 };
@@ -332,7 +361,9 @@ const getUserRole = (user) => {
 
 // Estilo para el rol
 const getRoleClass = (role) => {
-    return role === "admin" ? "bg-blue-100 text-blue-800" : "bg-gray-100 text-gray-800";
+    return role === "admin"
+        ? "bg-blue-100 text-blue-800"
+        : "bg-gray-100 text-gray-800";
 };
 </script>
 
@@ -519,21 +550,34 @@ const getRoleClass = (role) => {
                     </p>
                 </div>
 
-<!-- Avatar -->
-<div>
-    <label for="avatar" class="block mb-1 text-sm font-medium text-gray-700">Avatar</label>
-    <input
-        id="avatar"
-        type="file"
-        accept="image/*"
-        @change="handleAvatarChange"
-        ref="avatarInput"
-        class="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-        :class="errors.avatar ? 'border-red-500 ring-red-500' : ''"
-    />
-    <p v-if="errors.avatar" class="mt-1 text-xs text-red-600">{{ errors.avatar }}</p>
-    <img v-if="currentAvatarUrl" :src="currentAvatarUrl" alt="Current Avatar" class="mt-2 h-20 w-20 rounded-full object-cover" />
-</div>
+                <!-- Avatar -->
+                <div>
+                    <label
+                        for="avatar"
+                        class="block mb-1 text-sm font-medium text-gray-700"
+                        >Avatar</label
+                    >
+                    <input
+                        id="avatar"
+                        type="file"
+                        accept="image/*"
+                        @change="handleAvatarChange"
+                        ref="avatarInput"
+                        class="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                        :class="
+                            errors.avatar ? 'border-red-500 ring-red-500' : ''
+                        "
+                    />
+                    <p v-if="errors.avatar" class="mt-1 text-xs text-red-600">
+                        {{ errors.avatar }}
+                    </p>
+                    <img
+                        v-if="currentAvatarUrl"
+                        :src="currentAvatarUrl"
+                        alt="Current Avatar"
+                        class="mt-2 h-20 w-20 rounded-full object-cover"
+                    />
+                </div>
 
                 <!-- Botón -->
                 <button

@@ -356,7 +356,7 @@
                     data-dropdown-toggle="apps-dropdown"
                     class="p-2 text-gray-500 rounded-lg hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-700 focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600"
                 >
-                    <span class="sr-only">View notifications</span>
+                    <span class="sr-only">Opciones</span>
                     <!-- Icon -->
                     <svg
                         class="w-6 h-6"
@@ -430,26 +430,29 @@
                         </Link>
 
                         <!-- Usuarios (solo para admin) -->
-        <Link
-            v-if="$page.props.auth.user && $page.props.auth.user.is_admin"
-            :href="route('admin.users.index')"
-            class="block p-4 text-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 group"
-        >
-            <svg
-                aria-hidden="true"
-                class="mx-auto mb-1 w-7 h-7 text-gray-400 group-hover:text-gray-500 dark:text-gray-400 dark:group-hover:text-gray-400"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-                xmlns="http://www.w3.org/2000/svg"
-            >
-                <path
-                    d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"
-                ></path>
-            </svg>
-            <div class="text-sm text-gray-900 dark:text-white">
-                Usuarios
-            </div>
-        </Link>
+                        <Link
+                            v-if="
+                                $page.props.auth.user &&
+                                $page.props.auth.user.is_admin
+                            "
+                            :href="route('admin.users.index')"
+                            class="block p-4 text-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 group"
+                        >
+                            <svg
+                                aria-hidden="true"
+                                class="mx-auto mb-1 w-7 h-7 text-gray-400 group-hover:text-gray-500 dark:text-gray-400 dark:group-hover:text-gray-400"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path
+                                    d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"
+                                ></path>
+                            </svg>
+                            <div class="text-sm text-gray-900 dark:text-white">
+                                Usuarios
+                            </div>
+                        </Link>
                     </div>
 
                     <!-- Cerrar Sesión (fuera del grid) -->
@@ -496,7 +499,7 @@
                     <span class="sr-only">Open user menu</span>
                     <img
                         class="w-8 h-8 rounded-full"
-                        src="https://flowbite.s3.amazonaws.com/blocks/marketing-ui/avatars/michael-gough.png"
+                        :src="user.avatar"
                         alt="user photo"
                     />
                 </button>
@@ -522,12 +525,12 @@
                         aria-labelledby="dropdown"
                     >
                         <li>
-                            <a
-                                href="#"
+                            <Link
+                                :href="route('profile.edit')"
                                 class="block py-2 px-4 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-400 dark:hover:text-white"
                             >
-                                My profile
-                            </a>
+                                Mi perfil
+                            </Link>
                         </li>
                         <li>
                             <a

@@ -19,7 +19,7 @@ class ProfileController extends Controller
         return Inertia::render('Profile/Edit', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => session('status'),
-            'avatar_url' => $request->user()->avatar_url,
+            'avatar_url' => $request->user()->avatar ? Storage::url($request->user()->avatar) : null,
         ]);
     }
 
@@ -59,7 +59,7 @@ class ProfileController extends Controller
         return Redirect::to('/');
     }
 
-    public function updateAvatar(Request $request): RedirectResponse
+    public function updateAvatar(Request $request): Response
     {
         $request->validate([
             'avatar' => 'required|image|max:2048',
@@ -76,6 +76,11 @@ class ProfileController extends Controller
         $path = $request->file('avatar')->store('avatars', 'public');
         $user->update(['avatar' => $path]);
 
-        return Redirect::route('profile.edit')->with('status', 'avatar-updated');
+        // Devolver vista con avatar actualizado
+        return Inertia::render('Profile/Edit', [
+            'mustVerifyEmail' => $user instanceof MustVerifyEmail,
+            'status' => session('status'),
+            'avatar_url' => Storage::url($user->avatar),
+        ]);
     }
 }

@@ -25,9 +25,18 @@ const updateAvatar = () => {
     const avatarForm = useForm({ avatar: form.avatar });
     avatarForm.post(route('profile.avatar.update'), {
         preserveScroll: true,
-        onSuccess: () => {
+        onSuccess: (response) => {
+            // Actualizar la vista previa local
             avatarPreview.value = URL.createObjectURL(form.avatar);
-            form.avatar = null;
+            // Emitir evento con la nueva URL del avatar desde el backend
+            const newAvatarUrl = response.props.auth.user.avatar_url; // Asegúrate de que el backend devuelva esto
+            window.dispatchEvent(new CustomEvent('avatarUpdated', {
+                detail: { avatar: newAvatarUrl }
+            }));
+            form.avatar = null; // Limpiar el campo del formulario
+        },
+        onError: () => {
+            // Manejar errores si es necesario
         },
     });
 };

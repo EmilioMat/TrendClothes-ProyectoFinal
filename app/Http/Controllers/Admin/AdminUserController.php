@@ -15,7 +15,6 @@ use Illuminate\Validation\Rule;
 class AdminUserController extends Controller
 {
     // Listar usuarios con paginación
-    // Listar usuarios con paginación
     public function index(Request $request)
     {
         $query = User::orderBy('created_at', 'desc');
@@ -59,7 +58,27 @@ class AdminUserController extends Controller
             'role' => 'required|in:admin,client',
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
         ], [
-            // ... mensajes de validación ...
+            'name.required' => 'El nombre es obligatorio',
+            'name.string' => 'El nombre debe ser una cadena de texto',
+            'name.max' => 'El nombre no puede exceder los 255 caracteres',
+            'name.unique' => 'Este nombre de usuario ya está en uso',
+
+            'email.required' => 'El correo electrónico es obligatorio',
+            'email.email' => 'Debe ingresar un correo electrónico válido',
+            'email.max' => 'El correo electrónico no puede exceder los 255 caracteres',
+            'email.unique' => 'Este correo electrónico ya está registrado',
+
+            'password.required' => 'La contraseña es obligatoria',
+            'password.string' => 'La contraseña debe ser una cadena de texto',
+            'password.min' => 'La contraseña debe tener al menos 8 caracteres',
+            'password.confirmed' => 'Las contraseñas no coinciden',
+
+            'role.required' => 'El rol es obligatorio',
+            'role.in' => 'El rol seleccionado no es válido',
+
+            'avatar.image' => 'El archivo debe ser una imagen válida',
+            'avatar.mimes' => 'La imagen debe ser de tipo: jpeg, png, jpg o gif',
+            'avatar.max' => 'La imagen no debe pesar más de 2MB'
         ]);
 
         if ($validator->fails()) {
@@ -74,13 +93,13 @@ class AdminUserController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => bcrypt($request->password),
-            'role' => $request->role, // Usar el rol del formulario
+            'role' => $request->role,
         ]);
 
         // Guardar avatar si existe
         if ($request->hasFile('avatar')) {
             $path = $request->file('avatar')->store('avatars', 'public');
-            $user->avatar = $path; // No need for str_replace since store() with 'public' disk returns the full path
+            $user->avatar = $path;
             $user->save();
         }
 
@@ -93,9 +112,42 @@ class AdminUserController extends Controller
         $user = User::findOrFail($id);
 
         $validator = Validator::make($request->all(), [
-            // ... reglas de validación ...
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('users', 'name')->ignore($user->id),
+            ],
+            'email' => [
+                'required',
+                'email',
+                'max:255',
+                Rule::unique('users')->ignore($user->id),
+            ],
+            'password' => 'nullable|string|min:8|confirmed',
+            'role' => 'required|in:admin,client',
+            'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
         ], [
-            // ... mensajes de validación ...
+            'name.required' => 'El nombre es obligatorio',
+            'name.string' => 'El nombre debe ser una cadena de texto',
+            'name.max' => 'El nombre no puede exceder los 255 caracteres',
+            'name.unique' => 'Este nombre de usuario ya está en uso',
+
+            'email.required' => 'El correo electrónico es obligatorio',
+            'email.email' => 'Debe ingresar un correo electrónico válido',
+            'email.max' => 'El correo electrónico no puede exceder los 255 caracteres',
+            'email.unique' => 'Este correo electrónico ya está registrado',
+
+            'password.string' => 'La contraseña debe ser una cadena de texto',
+            'password.min' => 'La contraseña debe tener al menos 8 caracteres',
+            'password.confirmed' => 'Las contraseñas no coinciden',
+
+            'role.required' => 'El rol es obligatorio',
+            'role.in' => 'El rol seleccionado no es válido',
+
+            'avatar.image' => 'El archivo debe ser una imagen válida',
+            'avatar.mimes' => 'La imagen debe ser de tipo: jpeg, png, jpg o gif',
+            'avatar.max' => 'La imagen no debe pesar más de 2MB'
         ]);
 
         if ($validator->fails()) {
@@ -109,7 +161,7 @@ class AdminUserController extends Controller
         $user->update([
             'name' => $request->name,
             'email' => $request->email,
-            'role' => $request->role, // Usar el rol del formulario
+            'role' => $request->role,
         ]);
 
         // Actualizar contraseña si se proporcionó
@@ -153,37 +205,40 @@ class AdminUserController extends Controller
     }
 
     // Eliminar múltiples usuarios
-public function deleteMultiple(Request $request)
-{
-    $request->validate([
-        'ids' => 'required|array',
-        'ids.*' => 'exists:users,id',
-    ]);
+    public function deleteMultiple(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:users,id',
+        ], [
+            'ids.required' => 'Debe seleccionar al menos un usuario para eliminar',
+            'ids.array' => 'Los datos deben ser un arreglo de IDs',
+            'ids.*.exists' => 'Uno o más usuarios seleccionados no existen'
+        ]);
 
-    // Contar cuántos administradores serían eliminados
-    $adminUsers = User::whereIn('id', $request->ids)->where('role', 'admin')->count();
-    $totalAdmins = User::where('role', 'admin')->count();
+        // Contar cuántos administradores serían eliminados
+        $adminUsers = User::whereIn('id', $request->ids)->where('role', 'admin')->count();
+        $totalAdmins = User::where('role', 'admin')->count();
 
-    // Si se intenta eliminar a todos los administradores, se impide
-    if ($adminUsers > 0 && ($totalAdmins - $adminUsers) <= 0) {
-        return redirect()->back()
-            ->with('error', 'No se pueden eliminar todos los administradores');
-    }
-
-    // Eliminar avatares de todos los usuarios seleccionados (admin y no admin)
-    $users = User::whereIn('id', $request->ids)->get();
-    foreach ($users as $user) {
-        if ($user->avatar) {
-            Storage::disk('public')->delete($user->avatar);
+        // Si se intenta eliminar a todos los administradores, se impide
+        if ($adminUsers > 0 && ($totalAdmins - $adminUsers) <= 0) {
+            return redirect()->back()
+                ->with('error', 'No se pueden eliminar todos los administradores');
         }
+
+        // Eliminar avatares de todos los usuarios seleccionados (admin y no admin)
+        $users = User::whereIn('id', $request->ids)->get();
+        foreach ($users as $user) {
+            if ($user->avatar) {
+                Storage::disk('public')->delete($user->avatar);
+            }
+        }
+
+        // Eliminar todos los usuarios seleccionados
+        $usersToDelete = User::whereIn('id', $request->ids)->delete();
+
+        return redirect()->back()->with('success', 'Usuarios eliminados correctamente');
     }
-
-    // Eliminar todos los usuarios seleccionados
-    $usersToDelete = User::whereIn('id', $request->ids)->delete();
-
-    return redirect()->back()->with('success', 'Usuarios eliminados correctamente');
-}
-
 
     // Eliminar todos los usuarios (solo clientes)
     public function deleteAll()
