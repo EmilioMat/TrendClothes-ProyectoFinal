@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\DB;
 
 class AdminCategoryController extends Controller
 {
@@ -37,7 +37,7 @@ class AdminCategoryController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        $category = Category::create($validated);
+        Category::create($validated);
 
         return redirect()->route('admin.categories.index')->with('success', 'Categoría creada correctamente');
     }
@@ -57,23 +57,19 @@ class AdminCategoryController extends Controller
         return redirect()->back()->with('success', 'Categoría actualizada correctamente');
     }
 
-    // Eliminar categoría
     public function destroy($id)
     {
         $category = Category::findOrFail($id);
-        
-        // Verificar si hay productos asociados
+
         if ($category->products()->exists()) {
-            return redirect()->back()
-                ->with('error', 'No se puede eliminar la categoría porque tiene productos asociados');
+            return redirect()->back()->with('error', 'No se puede eliminar la categoría porque tiene productos asociados');
         }
 
         $category->delete();
-        
-        return redirect()->route('admin.categories.index')->with('success', 'Categoría eliminada correctamente');
+
+        return redirect()->back()->with('success', 'Categoría eliminada correctamente');
     }
 
-    // Eliminar múltiples categorías
     public function deleteMultiple(Request $request)
     {
         $request->validate([
@@ -81,14 +77,12 @@ class AdminCategoryController extends Controller
             'ids.*' => 'exists:categories,id',
         ]);
 
-        // Verificar que ninguna categoría tenga productos
         $categoriesWithProducts = Category::whereIn('id', $request->ids)
             ->whereHas('products')
             ->count();
 
         if ($categoriesWithProducts > 0) {
-            return redirect()->back()
-                ->with('error', 'No se pueden eliminar categorías que tienen productos asociados');
+            return redirect()->back()->with('error', 'No se pueden eliminar categorías que tienen productos asociados');
         }
 
         Category::whereIn('id', $request->ids)->delete();
@@ -96,18 +90,16 @@ class AdminCategoryController extends Controller
         return redirect()->back()->with('success', 'Categorías eliminadas correctamente');
     }
 
-    // Eliminar todas las categorías
     public function deleteAll()
     {
-        // Verificar que no haya categorías con productos
         $categoriesWithProducts = Category::whereHas('products')->count();
 
         if ($categoriesWithProducts > 0) {
-            return redirect()->back()
-                ->with('error', 'No se pueden eliminar todas las categorías porque algunas tienen productos asociados');
+            return redirect()->back()->with('error', 'No se pueden eliminar todas las categorías porque algunas tienen productos asociados');
         }
 
-        Category::truncate();
+        Category::query()->delete();
+        DB::statement('ALTER TABLE categories AUTO_INCREMENT = 1');
 
         return redirect()->back()->with('success', 'Todas las categorías eliminadas correctamente');
     }

@@ -53,12 +53,11 @@ class AdminSizeController extends Controller
         return redirect()->back()->with('success', 'Talla actualizada correctamente');
     }
 
-    // Eliminar talla
+ // Eliminar talla
     public function destroy($id)
     {
         $size = Size::findOrFail($id);
         
-        // Verificar si hay productos asociados
         if ($size->products()->exists()) {
             return redirect()->back()
                 ->with('error', 'No se puede eliminar la talla porque tiene productos asociados');
@@ -66,7 +65,8 @@ class AdminSizeController extends Controller
 
         $size->delete();
         
-        return redirect()->route('admin.sizes.index')->with('success', 'Talla eliminada correctamente');
+        return redirect()->route('admin.sizes.index')
+            ->with('success', 'Talla eliminada correctamente');
     }
 
     // Eliminar múltiples tallas
@@ -77,7 +77,6 @@ class AdminSizeController extends Controller
             'ids.*' => 'exists:sizes,id',
         ]);
 
-        // Verificar que ninguna talla tenga productos
         $sizesWithProducts = Size::whereIn('id', $request->ids)
             ->whereHas('products')
             ->count();
@@ -89,13 +88,13 @@ class AdminSizeController extends Controller
 
         Size::whereIn('id', $request->ids)->delete();
 
-        return redirect()->back()->with('success', 'Tallas eliminadas correctamente');
+        return redirect()->back()
+            ->with('success', 'Tallas eliminadas correctamente');
     }
 
     // Eliminar todas las tallas
-     public function deleteAll()
+    public function deleteAll()
     {
-        // Verificar que no haya tallas con productos
         $sizesWithProducts = Size::whereHas('products')->count();
 
         if ($sizesWithProducts > 0) {
@@ -103,9 +102,9 @@ class AdminSizeController extends Controller
                 ->with('error', 'No se pueden eliminar todas las tallas porque algunas tienen productos asociados');
         }
 
-        // Usar delete() en lugar de truncate() para respetar las relaciones
-        Size::whereDoesntHave('products')->delete();
+        Size::query()->delete();
 
-        return redirect()->back()->with('success', 'Todas las tallas sin productos asociados eliminadas correctamente');
+        return redirect()->back()
+            ->with('success', 'Todas las tallas eliminadas correctamente');
     }
 }

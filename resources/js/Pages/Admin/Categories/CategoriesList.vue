@@ -1,7 +1,6 @@
 <script setup>
 import { router, usePage } from "@inertiajs/vue3";
 import { ref, computed, onMounted, onUnmounted, watch } from "vue";
-import { Plus } from "@element-plus/icons-vue";
 import { debounce } from "lodash";
 
 const props = defineProps({
@@ -17,9 +16,26 @@ const selectAll = ref(false);
 const showCheckboxes = ref(false);
 const showDeleteModal = ref(false);
 const showSuccessMessage = ref(false);
+const showErrorModal = ref(false);
+const errorMessage = ref('');
 const deleteAllMode = ref(false);
 const searchQuery = ref('');
 const activeDropdown = ref(null); // Para rastrear el dropdown abierto
+
+// Acceder a los mensajes flash
+const flash = computed(() => usePage().props.flash);
+
+// Mostrar mensajes flash al cargar la página
+watch(flash, (newFlash) => {
+    if (newFlash.success) {
+        showSuccessMessage.value = true;
+        setTimeout(() => showSuccessMessage.value = false, 3000);
+    }
+    if (newFlash.error) {
+        errorMessage.value = newFlash.error;
+        showErrorModal.value = true;
+    }
+});
 
 // Form data
 const form = ref({
@@ -120,34 +136,30 @@ const handleClose = (done) => {
 };
 
 // Guardar categoría
-const saveCategory = async () => {
-    try {
-        if (editMode.value) {
-            await router.post(route('admin.categories.update', form.value.id), form.value, {
-                onSuccess: () => {
-                    dialogVisible.value = false;
-                    activeDropdown.value = null; // Cerrar dropdown después de actualizar
-                },
-            });
-        } else {
-            await router.post(route('admin.categories.store'), form.value, {
-                onSuccess: () => {
-                    dialogVisible.value = false;
-                    activeDropdown.value = null; // Cerrar dropdown después de agregar
-                },
-            });
-        }
-    } catch (error) {
-        console.error('Error saving category:', error);
+const saveCategory = () => {
+    if (editMode.value) {
+        router.post(route('admin.categories.update', form.value.id), form.value, {
+            onSuccess: () => {
+                dialogVisible.value = false;
+                activeDropdown.value = null; // Cerrar dropdown después de actualizar
+            },
+        });
+    } else {
+        router.post(route('admin.categories.store'), form.value, {
+            onSuccess: () => {
+                dialogVisible.value = false;
+                activeDropdown.value = null; // Cerrar dropdown después de agregar
+            },
+        });
     }
 };
 
 // Eliminar categoría
-const deleteCategory = async (categoryId) => {
+const deleteCategory = (categoryId) => {
     showDeleteModal.value = true;
     deleteAllMode.value = false;
     selectedCategories.value = [categoryId];
-    activeDropdown.value = null; // Cerrar dropdown al abrir el modal de eliminación
+    activeDropdown.value = null;
 };
 
 // Toggle checkboxes visibility
@@ -187,18 +199,16 @@ const openDeleteAllModal = () => {
 };
 
 // Confirmar eliminación
-const confirmDelete = async () => {
+const confirmDelete = () => {
     if (deleteAllMode.value) {
-        await router.post(route('admin.categories.delete-all'), {}, {
+        router.post(route('admin.categories.delete-all'), {}, {
             onSuccess: () => {
                 selectedCategories.value = [];
                 selectAll.value = false;
                 showCheckboxes.value = false;
                 showDeleteModal.value = false;
                 deleteAllMode.value = false;
-                showSuccessMessage.value = true;
-                setTimeout(() => showSuccessMessage.value = false, 3000);
-                activeDropdown.value = null; // Cerrar dropdown después de eliminar
+                activeDropdown.value = null;
             },
         });
     } else {
@@ -206,28 +216,30 @@ const confirmDelete = async () => {
             showDeleteModal.value = false;
             return;
         }
-        await router.post(route('admin.categories.delete-multiple'), { ids: selectedCategories.value }, {
-            onSuccess: () => {
-                selectedCategories.value = [];
-                selectAll.value = false;
-                showCheckboxes.value = false;
-                showDeleteModal.value = false;
-                showSuccessMessage.value = true;
-                setTimeout(() => showSuccessMessage.value = false, 3000);
-                activeDropdown.value = null; // Cerrar dropdown después de eliminar
-            },
-        });
+        
+        router.post(route('admin.categories.delete-multiple'), 
+            { ids: selectedCategories.value }, 
+            {
+                onSuccess: () => {
+                    selectedCategories.value = [];
+                    selectAll.value = false;
+                    showCheckboxes.value = false;
+                    showDeleteModal.value = false;
+                    activeDropdown.value = null;
+                },
+            }
+        );
     }
 };
 
 // Búsqueda con debounce
 const performSearch = debounce(() => {
     router.get(route('admin.categories.index'), 
-    { search: searchQuery.value },
-    {
-        preserveState: true,
-        replace: true
-    });
+        { search: searchQuery.value },
+        {
+            preserveState: true,
+            replace: true
+        });
     activeDropdown.value = null; // Cerrar dropdown al buscar
 }, 300);
 
@@ -324,6 +336,27 @@ const closeDropdownsOnOutsideClick = (e) => {
                     <el-button type="danger" @click="confirmDelete"
                         >Eliminar</el-button
                     >
+                </span>
+            </template>
+        </el-dialog>
+
+        <!-- Modal de error -->
+        <el-dialog
+            v-model="showErrorModal"
+            title="Error al eliminar"
+            width="30%"
+        >
+            <p class="text-sm text-gray-600 dark:text-gray-400">
+                {{ errorMessage }}
+            </p>
+            <template #footer>
+                <span class="dialog-footer">
+                    <el-button 
+                        type="primary" 
+                        @click="showErrorModal = false"
+                    >
+                        Entendido
+                    </el-button>
                 </span>
             </template>
         </el-dialog>

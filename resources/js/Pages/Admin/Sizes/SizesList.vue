@@ -1,11 +1,10 @@
 <script setup>
 import { router, usePage } from "@inertiajs/vue3";
 import { ref, computed, onMounted, onUnmounted, watch } from "vue";
-import { Plus } from "@element-plus/icons-vue";
 import { debounce } from "lodash";
 
 const props = defineProps({
-    sizes: Object, // Cambiamos de categories a sizes
+    sizes: Object,
 });
 
 // Estado del componente
@@ -17,14 +16,31 @@ const selectAll = ref(false);
 const showCheckboxes = ref(false);
 const showDeleteModal = ref(false);
 const showSuccessMessage = ref(false);
+const showErrorModal = ref(false);
+const errorMessage = ref('');
 const deleteAllMode = ref(false);
 const searchQuery = ref('');
-const activeDropdown = ref(null); // Para rastrear el dropdown abierto
+const activeDropdown = ref(null);
+
+// Acceder a los mensajes flash
+const flash = computed(() => usePage().props.flash);
+
+// Mostrar mensajes flash al cargar la página
+watch(flash, (newFlash) => {
+    if (newFlash.success) {
+        showSuccessMessage.value = true;
+        setTimeout(() => showSuccessMessage.value = false, 3000);
+    }
+    if (newFlash.error) {
+        errorMessage.value = newFlash.error;
+        showErrorModal.value = true;
+    }
+});
 
 // Form data
 const form = ref({
     id: "",
-    name: "", // Solo name para tallas
+    name: "",
 });
 
 // Computadas para la paginación
@@ -63,7 +79,7 @@ function goToPage(page) {
         preserveState: true,
         replace: true,
     });
-    activeDropdown.value = null; // Cerrar dropdown al cambiar de página
+    activeDropdown.value = null;
 }
 
 function nextPage() {
@@ -99,7 +115,7 @@ const openEditModal = (size) => {
     };
     editMode.value = true;
     dialogVisible.value = true;
-    activeDropdown.value = null; // Cerrar dropdown al abrir el modal
+    activeDropdown.value = null;
 };
 
 // Abrir modal para añadir
@@ -107,44 +123,40 @@ const openAddModal = () => {
     resetForm();
     editMode.value = false;
     dialogVisible.value = true;
-    activeDropdown.value = null; // Cerrar dropdown al abrir el modal
+    activeDropdown.value = null;
 };
 
 // Manejar cierre del modal
 const handleClose = (done) => {
     done();
-    activeDropdown.value = null; // Cerrar dropdown al cerrar el modal
+    activeDropdown.value = null;
 };
 
 // Guardar talla
-const saveSize = async () => {
-    try {
-        if (editMode.value) {
-            await router.post(route('admin.sizes.update', form.value.id), form.value, {
-                onSuccess: () => {
-                    dialogVisible.value = false;
-                    activeDropdown.value = null; // Cerrar dropdown después de actualizar
-                },
-            });
-        } else {
-            await router.post(route('admin.sizes.store'), form.value, {
-                onSuccess: () => {
-                    dialogVisible.value = false;
-                    activeDropdown.value = null; // Cerrar dropdown después de agregar
-                },
-            });
-        }
-    } catch (error) {
-        console.error('Error saving size:', error);
+const saveSize = () => {
+    if (editMode.value) {
+        router.post(route('admin.sizes.update', form.value.id), form.value, {
+            onSuccess: () => {
+                dialogVisible.value = false;
+                activeDropdown.value = null;
+            },
+        });
+    } else {
+        router.post(route('admin.sizes.store'), form.value, {
+            onSuccess: () => {
+                dialogVisible.value = false;
+                activeDropdown.value = null;
+            },
+        });
     }
 };
 
 // Eliminar talla
-const deleteSize = async (sizeId) => {
+const deleteSize = (sizeId) => {
     showDeleteModal.value = true;
     deleteAllMode.value = false;
     selectedSizes.value = [sizeId];
-    activeDropdown.value = null; // Cerrar dropdown al abrir el modal de eliminación
+    activeDropdown.value = null;
 };
 
 // Toggle checkboxes visibility
@@ -154,7 +166,7 @@ const toggleCheckboxes = () => {
         selectedSizes.value = [];
         selectAll.value = false;
     }
-    activeDropdown.value = null; // Cerrar dropdown al alternar checkboxes
+    activeDropdown.value = null;
 };
 
 // Toggle select all sizes
@@ -173,70 +185,59 @@ const openDeleteModal = () => {
         return;
     }
     showDeleteModal.value = true;
-    activeDropdown.value = null; // Cerrar dropdown al abrir el modal
+    activeDropdown.value = null;
 };
 
 // Abrir modal para eliminar todo
 const openDeleteAllModal = () => {
     deleteAllMode.value = true;
     showDeleteModal.value = true;
-    activeDropdown.value = null; // Cerrar dropdown al abrir el modal
+    activeDropdown.value = null;
 };
-const isDeleting = ref(false);
+
 // Confirmar eliminación
-const confirmDelete = async () => {
-    isDeleting.value = true; // Mostrar botón "cargando"
-    try {
-        if (deleteAllMode.value) {
-            await router.post(route('admin.sizes.delete-all'), {}, {
-                onSuccess: () => {
-                    selectedSizes.value = [];
-                    selectAll.value = false;
-                    showCheckboxes.value = false;
-                    showSuccessMessage.value = true;
-                    setTimeout(() => showSuccessMessage.value = false, 3000);
-                    activeDropdown.value = null;
-                },
-                onError: (errors) => {
-                    showErrorModal(errors.message || 'Error al eliminar todos los registros');
-                }
-            });
-        } else {
-            if (selectedSizes.value.length === 0) {
-                return;
-            }
-            await router.post(route('admin.sizes.delete-multiple'), { ids: selectedSizes.value }, {
-                onSuccess: () => {
-                    selectedSizes.value = [];
-                    selectAll.value = false;
-                    showCheckboxes.value = false;
-                    showSuccessMessage.value = true;
-                    setTimeout(() => showSuccessMessage.value = false, 3000);
-                    activeDropdown.value = null;
-                },
-                onError: (errors) => {
-                    showErrorModal(errors.message || 'Error al eliminar seleccionados');
-                }
-            });
+const confirmDelete = () => {
+    if (deleteAllMode.value) {
+        router.post(route('admin.sizes.delete-all'), {}, {
+            onSuccess: () => {
+                selectedSizes.value = [];
+                selectAll.value = false;
+                showCheckboxes.value = false;
+                showDeleteModal.value = false;
+                deleteAllMode.value = false;
+                activeDropdown.value = null;
+            },
+        });
+    } else {
+        if (selectedSizes.value.length === 0) {
+            showDeleteModal.value = false;
+            return;
         }
-    } catch (error) {
-        showErrorModal(error.message || 'Ocurrió un error inesperado');
-    } finally {
-        showDeleteModal.value = false; // Asegura que se cierre el modal
-        deleteAllMode.value = false;
-        isDeleting.value = false; // Ocultar estado de carga
+        
+        router.post(route('admin.sizes.delete-multiple'), 
+            { ids: selectedSizes.value }, 
+            {
+                onSuccess: () => {
+                    selectedSizes.value = [];
+                    selectAll.value = false;
+                    showCheckboxes.value = false;
+                    showDeleteModal.value = false;
+                    activeDropdown.value = null;
+                },
+            }
+        );
     }
 };
 
 // Búsqueda con debounce
 const performSearch = debounce(() => {
     router.get(route('admin.sizes.index'), 
-    { search: searchQuery.value },
-    {
-        preserveState: true,
-        replace: true
-    });
-    activeDropdown.value = null; // Cerrar dropdown al buscar
+        { search: searchQuery.value },
+        {
+            preserveState: true,
+            replace: true
+        });
+    activeDropdown.value = null;
 }, 300);
 
 // Lifecycle hooks for dropdown management
@@ -249,11 +250,11 @@ onUnmounted(() => {
 });
 
 watch(() => props.sizes.current_page, () => {
-    activeDropdown.value = null; // Cerrar dropdown al cambiar de página
+    activeDropdown.value = null;
 });
 
 watch(() => searchQuery.value, () => {
-    activeDropdown.value = null; // Cerrar dropdown al buscar
+    activeDropdown.value = null;
 });
 
 // Cerrar dropdowns al hacer clic fuera
@@ -309,22 +310,42 @@ const closeDropdownsOnOutsideClick = (e) => {
                 ¿Estás seguro de que deseas eliminar
                 {{
                     deleteAllMode
-                        ? "todas las tallas"
-                        : "las tallas seleccionadas"
+                        ? 'todas las tallas'
+                        : 'las tallas seleccionadas'
                 }}? Esta acción no se puede deshacer.
             </p>
-<template #footer>
-    <span class="dialog-footer">
-        <el-button @click="showDeleteModal = false">Cancelar</el-button>
-        <el-button 
-            type="danger"
-            @click="confirmDelete"
-            :loading="isDeleting"
+            <template #footer>
+                <span class="dialog-footer">
+                    <el-button @click="showDeleteModal = false">Cancelar</el-button>
+                    <el-button 
+                        type="danger"
+                        @click="confirmDelete"
+                    >
+                        Eliminar
+                    </el-button>
+                </span>
+            </template>
+        </el-dialog>
+
+        <!-- Modal de error -->
+        <el-dialog
+            v-model="showErrorModal"
+            title="Error al eliminar"
+            width="30%"
         >
-            Eliminar
-        </el-button>
-    </span>
-</template>
+            <p class="text-sm text-gray-600 dark:text-gray-400">
+                {{ errorMessage }}
+            </p>
+            <template #footer>
+                <span class="dialog-footer">
+                    <el-button 
+                        type="primary" 
+                        @click="showErrorModal = false"
+                    >
+                        Entendido
+                    </el-button>
+                </span>
+            </template>
         </el-dialog>
 
         <!-- Mensaje de éxito -->
