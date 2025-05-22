@@ -2,7 +2,7 @@
   <div class="min-h-screen bg-gray-50">
     <!-- Mensaje flash -->
     <div v-if="$page.props.flash.success" class="bg-emerald-100 border-l-4 border-emerald-500 text-emerald-700 p-4">
-      <div class="max-w-7xl mx-auto flex justify-between items-center">
+      <div class="mx-auto px-4 sm:px-6 lg:px-8" style="max-width: 1440px; width: 100%;">
         <p>{{ $page.props.flash.success }}</p>
         <button @click="$page.props.flash.success = null" class="text-emerald-700 hover:text-emerald-900">
           <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
@@ -14,7 +14,7 @@
 
     <!-- Navegación -->
     <nav class="bg-white shadow-lg">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="mx-auto px-4 sm:px-6 lg:px-8" style="max-width: 1440px; width: 100%;">
         <div class="flex justify-between h-20">
           <div class="flex items-center">
             <Link :href="route('home')" class="text-2xl font-bold text-indigo-600">TrendClothes</Link>
@@ -85,13 +85,13 @@
     </nav>
 
     <!-- Contenido principal -->
-    <main class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+    <main class="mx-auto py-8 px-4 sm:px-6 lg:px-8" style="max-width: 1440px; width: 100%;">
       <slot />
     </main>
 
     <!-- Pie de página -->
     <footer class="bg-gray-800 text-white py-12">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="mx-auto px-4 sm:px-6 lg:px-8" style="max-width: 1440px; width: 100%;">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
             <h3 class="text-lg font-semibold mb-4">TrendClothes</h3>

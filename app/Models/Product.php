@@ -20,6 +20,7 @@ class Product extends Model
         'color',
         'brand',
         'main_image',
+        'images',
         'published'
     ];
 
@@ -34,11 +35,6 @@ class Product extends Model
         return $this->belongsToMany(Size::class, 'product_size')
             ->withPivot('stock')
             ->withTimestamps();
-    }
-
-    public function brand()
-    {
-        return $this->belongsTo(Brand::class);
     }
 
     public function reviews()
@@ -60,6 +56,45 @@ class Product extends Model
     {
         return $this->hasMany(ProductImage::class);
     }
+
+public function scopeFiltered($query, array $filters = [])
+{
+    return $query
+        ->when(!empty($filters['colors']), function ($q) use ($filters) {
+            $q->whereIn('color', $filters['colors']);
+        })
+        ->when(!empty($filters['genders']), function ($q) use ($filters) {
+            $q->whereIn('gender', $filters['genders']);
+        })
+        ->when(!empty($filters['brands']), function ($q) use ($filters) {
+            $q->whereIn('brand', $filters['brands']);
+        })
+        ->when(!empty($filters['sizes']), function ($q) use ($filters) {
+            $q->whereHas('sizes', function ($query) use ($filters) {
+                $query->whereIn('sizes.id', $filters['sizes'])
+                      ->where('product_size.stock', '>', 0); // Ensure stock condition
+            });
+        })
+        ->when(isset($filters['price_min']), function ($q) use ($filters) {
+            $q->where('price', '>=', $filters['price_min']);
+        })
+        ->when(isset($filters['price_max']), function ($q) use ($filters) {
+            $q->where('price', '<=', $filters['price_max']);
+        })
+        ->when(!empty($filters['sort']), function ($q) use ($filters) {
+            switch ($filters['sort']) {
+                case 'price_asc':
+                    $q->orderBy('price', 'asc');
+                    break;
+                case 'price_desc':
+                    $q->orderBy('price', 'desc');
+                    break;
+                case 'newest':
+                    $q->orderBy('created_at', 'desc');
+                    break;
+            }
+        });
+}
 
     public static function boot()
     {
