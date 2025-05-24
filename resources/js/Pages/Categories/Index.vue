@@ -1,43 +1,802 @@
 <template>
-  <AppLayout>
-    <div class="bg-white py-8">
+  <div class="min-h-screen bg-gray-50">
+    <!-- Mensaje Flash -->
+    <div
+      v-if="$page.props.flash.success"
+      class="bg-emerald-100 border-l-4 border-emerald-500 text-emerald-700 p-4 fixed top-0 w-full z-50"
+      role="alert"
+    >
+      <div class="max-w-7xl mx-auto flex justify-between items-center">
+        <p>{{ $page.props.flash.success }}</p>
+        <button
+          @click="$page.props.flash.success = null"
+          class="text-emerald-700 hover:text-emerald-900"
+          aria-label="Cerrar mensaje"
+        >
+          <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+            <path
+              fill-rule="evenodd"
+              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+              clip-rule="evenodd"
+            />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Navegación -->
+    <nav :class="{ 'scrolled': isScrolled }" class="fixed top-0 left-0 w-full z-10 transition-all duration-300">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 class="text-3xl font-bold text-gray-900 mb-8">Nuestras Categorías</h1>
-        
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div
-            v-for="category in categories"
-            :key="category.id"
-            class="group relative bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
-          >
-            <div class="p-6">
-              <h3 class="text-xl font-semibold text-gray-900 mb-2">{{ category.name }}</h3>
-              <p class="text-gray-600 mb-4">{{ category.description }}</p>
-              <Link 
-                :href="route('categories.show', { category: category.slug })"
-                class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
-              >
-                Ver productos
-                <svg class="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+        <div class="flex justify-between h-20 items-center" :class="isScrolled ? 'h-16' : 'h-20'">
+          <!-- Logo -->
+          <div class="flex items-center">
+            <Link :href="route('home')" class="text-2xl font-bold" :class="isScrolled ? 'text-indigo-600' : 'text-white'">TrendClothes</Link>
+          </div>
+
+          <!-- Menú de Escritorio -->
+          <div class="hidden md:flex md:items-center md:ml-6 md:space-x-8">
+            <Link
+              :href="route('home')"
+              class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+              :class="[
+                route().current('home') ? 'border-indigo-500' : 'border-transparent hover:border-gray-300',
+                isScrolled ? 'text-gray-900 hover:text-indigo-600' : 'text-white hover:text-gray-200'
+              ]"
+            >
+              Inicio
+            </Link>
+            <Link
+              :href="route('categories.index')"
+              class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+              :class="[
+                route().current('categories.*') ? 'border-indigo-500' : 'border-transparent hover:border-gray-300',
+                isScrolled ? 'text-gray-900 hover:text-indigo-600' : 'text-white hover:text-gray-200'
+              ]"
+            >
+              Categorías
+            </Link>
+          </div>
+
+          <!-- Menú Derecho (Carrito y Usuario) -->
+          <div class="flex items-center space-x-4">
+            <!-- Carrito con Vista Previa al Pasar el Ratón -->
+            <div class="relative group">
+              <Link :href="route('cart.index')" class="flex items-center" :class="isScrolled ? 'text-gray-900 hover:text-indigo-600' : 'text-white hover:text-indigo-300'">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+                  />
                 </svg>
+                <span
+                  v-if="cartCount > 0"
+                  class="absolute -top-2 -right-2 bg-indigo-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center"
+                >
+                  {{ cartCount }}
+                </span>
               </Link>
+              <!-- Vista Previa del Carrito -->
+              <div
+                class="fixed md:absolute left-0 md:left-auto right-0 md:right-auto mt-2 w-full md:w-80 bg-white rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none group-hover:pointer-events-auto z-10"
+                style="max-width: 95vw; margin: 0 auto; transform: translateX(-50%); left: 50%;"
+              >
+                <div class="p-4">
+                  <span class="text-sm font-semibold text-gray-900">Carrito</span>
+                  <div v-if="cartItems.length > 0" class="mt-2 space-y-2">
+                    <div
+                      v-for="item in cartItems"
+                      :key="item.id"
+                      class="flex items-center space-x-4"
+                    >
+                      <img
+                        v-if="item.product.main_image"
+                        :src="item.product.main_image"
+                        :alt="item.product.name"
+                        class="h-12 w-12 object-cover rounded"
+                      />
+                      <div>
+                        <p class="text-sm text-gray-700">{{ item.product.name }}</p>
+                        <p class="text-xs text-gray-500">Cantidad: {{ item.quantity }}</p>
+                        <p class="text-sm font-semibold text-indigo-600">
+                          {{ formatPrice(item.product.price * item.quantity) }}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <p v-else class="text-sm text-gray-500">Tu carrito está vacío</p>
+                  <Link
+                    :href="route('cart.index')"
+                    class="mt-4 block text-center text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md py-2"
+                  >
+                    Ver Carrito
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            <!-- Menú de Usuario -->
+            <template v-if="$page.props.auth.user">
+              <div class="hidden md:block">
+                <Dropdown align="right" width="48">
+                  <template #trigger>
+                    <button
+                      class="flex items-center text-sm font-medium focus:outline-none"
+                      :class="isScrolled ? 'text-gray-900 hover:text-indigo-600' : 'text-white hover:text-gray-200'"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-6 w-6"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                        />
+                      </svg>
+                    </button>
+                  </template>
+                  <template #content>
+                    <DropdownLink :href="route('profile.edit')">Perfil</DropdownLink>
+                    <DropdownLink v-if="$page.props.auth.user.is_admin" :href="route('admin.dashboard')">
+                      Panel de Administración
+                    </DropdownLink>
+                    <DropdownLink :href="route('logout')" method="post" as="button">
+                      Cerrar Sesión
+                    </DropdownLink>
+                  </template>
+                </Dropdown>
+              </div>
+            </template>
+            <template v-else>
+              <Link
+                :href="route('login')"
+                class="text-sm font-medium mr-4 hidden md:block"
+                :class="isScrolled ? 'text-gray-900 hover:text-indigo-600' : 'text-white hover:text-gray-200'"
+              >
+                Iniciar Sesión
+              </Link>
+              <Link
+                v-if="$page.props.canRegister"
+                :href="route('register')"
+                class="text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-md hidden md:block"
+              >
+                Registrarse
+              </Link>
+            </template>
+
+            <!-- Botón de Menú Móvil -->
+            <div class="md:hidden">
+              <button
+                @click="mobileMenuOpen = !mobileMenuOpen"
+                class="focus:outline-none"
+                :class="isScrolled ? 'text-gray-500 hover:text-gray-700' : 'text-white hover:text-gray-200'"
+                aria-label="Abrir menú"
+              >
+                <svg
+                  v-if="!mobileMenuOpen"
+                  class="h-6 w-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
+                </svg>
+                <svg
+                  v-else
+                  class="h-6 w-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contenido del Menú Móvil -->
+        <div v-if="mobileMenuOpen" class="md:hidden fixed inset-0 z-50">
+          <div 
+            class="absolute inset-0 overflow-y-auto bg-gray-900 bg-opacity-80 backdrop-blur-md"
+            style="border: 0; bottom: 0; height: 100%; left: 0; overflow-y: scroll; padding: 0; position: absolute; right: 20px; width: calc(100% - 20px);"
+          >
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+              <div class="flex justify-end p-4">
+                <button
+                  @click="mobileMenuOpen = false"
+                  class="text-white hover:text-gray-300 focus:outline-none"
+                  aria-label="Cerrar menú"
+                >
+                  <svg
+                    class="h-8 w-8"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+              
+              <div class="flex flex-col items-center mt-8">
+                <Link
+                  :href="route('home')"
+                  class="block px-3 py-4 text-xl font-medium text-white border-b border-gray-700 w-full text-center"
+                  :class="route().current('home') ? 'text-indigo-300' : 'hover:text-gray-300'"
+                  @click="mobileMenuOpen = false"
+                >
+                  Inicio
+                </Link>
+                <Link
+                  :href="route('categories.index')"
+                  class="block px-3 py-4 text-xl font-medium text-white border-b border-gray-700 w-full text-center"
+                  :class="route().current('categories.*') ? 'text-indigo-300' : 'hover:text-gray-300'"
+                  @click="mobileMenuOpen = false"
+                >
+                  Categorías
+                </Link>
+                
+                <template v-if="$page.props.auth.user">
+                  <div class="w-full">
+                    <button
+                      @click="subMenuOpen = !subMenuOpen"
+                      class="block px-3 py-4 text-xl font-medium text-white border-b border-gray-700 w-full text-center hover:text-gray-300"
+                    >
+                      MI TRENDCLOTHES
+                    </button>
+                    <div v-if="subMenuOpen" class="pl-6 space-y-2">
+                      <Link
+                        :href="route('profile.edit')"
+                        class="block px-3 py-2 text-lg font-medium text-white border-b border-gray-700 w-full text-center hover:text-gray-300"
+                        @click="mobileMenuOpen = false; subMenuOpen = false"
+                      >
+                        Mi Perfil
+                      </Link>
+                      <Link
+                        v-if="$page.props.auth.user.is_admin"
+                        :href="route('admin.dashboard')"
+                        class="block px-3 py-2 text-lg font-medium text-white border-b border-gray-700 w-full text-center hover:text-gray-300"
+                        @click="mobileMenuOpen = false; subMenuOpen = false"
+                      >
+                        Panel de Administración
+                      </Link>
+                      <Link
+                        :href="route('logout')"
+                        method="post"
+                        as="button"
+                        class="block px-3 py-2 text-lg font-medium text-white border-b border-gray-700 w-full text-center hover:text-gray-300"
+                        @click="mobileMenuOpen = false; subMenuOpen = false"
+                      >
+                        Cerrar Sesión
+                      </Link>
+                    </div>
+                  </div>
+                </template>
+                <template v-else>
+                  <Link
+                    :href="route('login')"
+                    class="block px-3 py-4 text-xl font-medium text-white border-b border-gray-700 w-full text-center hover:text-gray-300"
+                    @click="mobileMenuOpen = false"
+                  >
+                    Iniciar Sesión
+                  </Link>
+                  <Link
+                    v-if="$page.props.canRegister"
+                    :href="route('register')"
+                    class="block px-3 py-4 text-xl font-medium text-white border-b border-gray-700 w-full text-center hover:text-gray-300"
+                    @click="mobileMenuOpen = false"
+                  >
+                    Registrarse
+                  </Link>
+                </template>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Sección Hero -->
+    <div class="relative h-screen max-h-[80vh] overflow-hidden">
+      <img 
+        src="https://i8.amplience.net/i/jpl/desktop-middle-banner-1704x740-2025-05-14t160533125-min-92dafc5bbc3a29281c9990ee1bc38662?qlt=80&fmt=auto" 
+        alt="Fondo de moda"
+        class="w-screen h-full object-cover object-center absolute left-0 top-0"
+      >
+      <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
+        <div class="text-center px-4">
+          <h1 class="text-4xl md:text-6xl font-bold text-white mb-6 animate-fade-in">
+            Descubre Nuestra Colección
+          </h1>
+          <p class="text-xl md:text-2xl text-white/90 max-w-2xl mx-auto mb-8 animate-fade-in delay-100">
+            Moda que inspira, diseños que perduran
+          </p>
+          <a 
+            href="#categories"
+            class="inline-block px-8 py-3 bg-white text-gray-900 font-semibold rounded-full hover:bg-gray-100 transition-all duration-300 animate-fade-in delay-200"
+          >
+            Explorar
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Marquee -->
+    <div class="bg-black py-6 overflow-hidden">
+      <div class="marquee-container">
+        <div class="marquee-content">
+          <span class="marquee-item text-white text-xl md:text-2xl font-bold mx-8">✦ NUEVA COLECCIÓN ✦</span>
+          <span class="marquee-item text-white text-xl md:text-2xl font-bold mx-8">✦ ENVÍO GRATIS ✦</span>
+          <span class="marquee-item text-white text-xl md:text-2xl font-bold mx-8">✦ 30% DE DESCUENTO ✦</span>
+          <span class="marquee-item text-white text-xl md:text-2xl font-bold mx-8">✦ CALIDAD PREMIUM ✦</span>
+          <span class="marquee-item text-white text-xl md:text-2xl font-bold mx-8">✦ NUEVA COLECCIÓN ✦</span>
+          <span class="marquee-item text-white text-xl md:text-2xl font-bold mx-8">✦ ENVÍO GRATIS ✦</span>
+          <span class="marquee-item text-white text-xl md:text-2xl font-bold mx-8">✦ 30% DE DESCUENTO ✦</span>
+          <span class="marquee-item text-white text-xl md:text-2xl font-bold mx-8">✦ CALIDAD PREMIUM ✦</span>
+          <span class="marquee-item text-white text-xl md:text-2xl font-bold mx-8">✦ NUEVA COLECCIÓN ✦</span>
+          <span class="marquee-item text-white text-xl md:text-2xl font-bold mx-8">✦ ENVÍO GRATIS ✦</span>
+          <span class="marquee-item text-white text-xl md:text-2xl font-bold mx-8">✦ 30% DE DESCUENTO ✦</span>
+          <span class="marquee-item text-white text-xl md:text-2xl font-bold mx-8">✦ CALIDAD PREMIUM ✦</span>
+          <span class="marquee-item text-white text-xl md:text-2xl font-bold mx-8">✦ NUEVA COLECCIÓN ✦</span>
+          <span class="marquee-item text-white text-xl md:text-2xl font-bold mx-8">✦ ENVÍO GRATIS ✦</span>
+          <span class="marquee-item text-white text-xl md:text-2xl font-bold mx-8">✦ 30% DE DESCUENTO ✦</span>
+          <span class="marquee-item text-white text-xl md:text-2xl font-bold mx-8">✦ CALIDAD PREMIUM ✦</span>
+          <span class="marquee-item text-white text-xl md:text-2xl font-bold mx-8">✦ NUEVA COLECCIÓN ✦</span>
+          <span class="marquee-item text-white text-xl md:text-2xl font-bold mx-8">✦ ENVÍO GRATIS ✦</span>
+          <span class="marquee-item text-white text-xl md:text-2xl font-bold mx-8">✦ 30% DE DESCUENTO ✦</span>
+          <span class="marquee-item text-white text-xl md:text-2xl font-bold mx-8">✦ CALIDAD PREMIUM ✦</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sección de Hero con Texto + Dos Imágenes -->
+    <div class="w-full h-screen max-h-[90vh] grid grid-cols-1 md:grid-cols-3">
+      <!-- Columna izquierda con fondo gris claro y texto centrado -->
+      <div class="bg-[#ECECEC] text-gray-900 flex flex-col justify-center items-center px-10 text-center py-8 md:py-16">
+        <h2 class="text-4xl md:text-5xl font-bold mb-4">Este invierno, no te abrígues...</h2>
+        <h3 class="text-3xl md:text-4xl font-semibold mb-6">destaca</h3>
+        <a 
+          href="#" 
+          class="inline-block px-6 py-3 border-2 border-gray-900 rounded-full hover:bg-gray-900 hover:text-white transition"
+        >
+          Ver ahora
+        </a>
+      </div>
+
+      <!-- Imagen central -->
+      <div class="relative h-full">
+        <img
+          src="https://i8.amplience.net/i/jpl/jd-729635-d-1-1aa225b239801ebeb2423f13273d847a"
+          alt="Modelo central"
+          class="w-full h-full object-cover object-center"
+        />
+      </div>
+
+      <!-- Imagen derecha -->
+      <div class="relative h-full">
+        <img
+          src="https://i8.amplience.net/i/jpl/jd-750838-g-1-52c6381546a3f3fd91d660ec539a5736"
+          alt="Modelo derecho"
+          class="w-full h-full object-cover object-center"
+        />
+      </div>
+    </div>
+
+    <!-- Sección de Beneficios -->
+    <div class="w-full pt-16 grid grid-cols-1 md:grid-cols-4 gap-2 px-4 py-4 items-center bg-white border-t border-gray-200">
+      <!-- Envío gratis -->
+      <div class="flex items-center space-x-4 justify-center md:space-x-6 md:gap-y-2">
+        <ShoppingCart class="w-12 h-12 text-black" />
+        <div class="text-left">
+          <p class="font-extrabold text-black text-2xl leading-snug">Envío gratis</p>
+          <p class="text-base text-gray-600 leading-snug">En toda</p>
+        </div>
+      </div>
+
+      <!-- Devolución 30 días -->
+      <div class="flex items-center space-x-4 justify-center md:space-x-6 md:gap-y-2">
+        <RefreshLeft class="w-12 h-12 text-black" />
+        <div class="text-left">
+          <p class="font-extrabold text-black text-2xl leading-snug">Devolución 30 días</p>
+          <p class="text-base text-gray-600 leading-snug">Satisfacción garantizada</p>
+        </div>
+      </div>
+
+      <!-- Botón: Ver nuestra meta -->
+      <div class="flex justify-center">
+        <a href="#" class="px-6 py-3 border border-black rounded-full hover:bg-black hover:text-white transition font-semibold text-lg">
+          Ver nuestra meta
+        </a>
+      </div>
+
+      <!-- Enlace de chat -->
+      <div class="flex items-center justify-center space-x-2 text-lg">
+        <ChatLineRound class="w-6 h-6 text-black" />
+        <a href="#" class="text-black font-semibold hover:underline">
+          Chatea con nosotros
+        </a>
+      </div>
+    </div>
+
+    <!-- Sección de Categorías -->
+    <div id="categories" class="bg-white py-16 sm:py-24">
+      <div class="mx-auto px-4 sm:px-6 lg:px-8" style="max-width: 1440px; width: 100%;">
+        <div class="text-center mb-12">
+          <h2 class="text-base font-semibold text-indigo-600 tracking-wide uppercase">Explora</h2>
+          <h3 class="mt-2 text-3xl font-extrabold text-gray-900 sm:text-4xl">
+            Nuestras Categorías
+          </h3>
+          <p class="mt-3 max-w-2xl mx-auto text-xl text-gray-500 sm:mt-4">
+            Descubre la moda que se adapta a tu estilo de vida
+          </p>
+        </div>
+
+        <div class="flex justify-between items-center mb-6">
+          <div class="flex space-x-3">
+            <button @click="prevSlide" class="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+              </svg>
+            </button>
+            <button @click="nextSlide" class="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Contenedor del Carrusel -->
+        <div class="relative overflow-hidden">
+          <div 
+            ref="carouselTrack" 
+            class="flex transition-transform duration-500 ease-in-out gap-6"
+            :style="{ transform: `translateX(${currentTranslateX}px)` }"
+          >
+            <div 
+              v-for="(category, index) in props.categories"
+              :key="`category-${category.id}-${index}`"
+              class="flex-shrink-0 carousel-card"
+              :style="{ width: `${cardWidth}px` }"
+            >
+              <div class="group relative overflow-hidden rounded-none shadow-xl hover:shadow-2xl transition-all duration-500 h-full">
+                <div class="h-full overflow-hidden">
+                  <img 
+                    :src="category.image_url"
+                    :alt="category.name"
+                    class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  >
+                </div>
+                <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent flex flex-col justify-end p-8">
+                  <h4 class="text-3xl font-bold text-white mb-4">{{ category.name }}</h4>
+                  <p class="text-gray-200 mb-6 text-sm">{{ category.description }}</p>
+                  <Link 
+                    :href="route('categories.show', { category: category.slug })"
+                    class="inline-flex items-center px-6 py-3 bg-white text-gray-900 rounded-full text-lg font-semibold hover:bg-gray-100 transition-colors w-fit"
+                  >
+                    Ver productos
+                    <svg class="ml-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Indicadores del Carrusel -->
+        <div class="flex justify-center mt-8 space-x-2">
+          <button
+            v-for="(slide, index) in totalSlides"
+            :key="index"
+            @click="goToSlide(index)"
+            class="w-3 h-3 rounded-full transition-colors"
+            :class="currentSlide === index ? 'bg-indigo-600' : 'bg-gray-300'"
+          ></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sección Diagonal Impactante -->
+    <div class="relative w-full overflow-hidden bg-white py-16">
+      <!-- Contenedor principal con clip-path diagonal -->
+      <div class="relative flex flex-col lg:flex-row">
+        <!-- Columna izquierda con imagen de fondo -->
+        <div class="w-full lg:w-1/2 h-96 lg:h-auto relative bg-white">
+          <!-- Imagen con clip-path -->
+          <div 
+            class="absolute inset-0 bg-cover bg-center z-0"
+            style="
+              background-image: url('/images/Page-Shop/Modelo4.jpeg');
+              background-position: center top;
+              clip-path: polygon(0 0, 100% 0, 85% 100%, 0% 100%);
+            "
+          ></div>
+
+          <!-- Superposición negra para legibilidad -->
+          <div class="absolute inset-0 bg-black/20 z-10" style="clip-path: polygon(0 0, 100% 0, 85% 100%, 0% 100%)"></div>
+
+          <!-- Texto superpuesto en versión móvil -->
+          <div class="lg:hidden relative z-20 p-8 text-white">
+            <h2 class="text-4xl font-bold mb-4">Nueva Colección</h2>
+            <p class="text-xl mb-6">Descubre las prendas que están definiendo esta temporada</p>
+            <a href="#" class="inline-block px-8 py-3 bg-white text-black font-bold rounded-full hover:bg-gray-100 transition">Ver Colección</a>
+          </div>
+        </div>
+
+        <!-- Columna derecha con texto -->
+        <div class="w-full lg:w-1/2 bg-white py-16 px-8 lg:px-16 flex items-center">
+          <div class="max-w-lg mx-auto ml-4">
+            <span class="text-sm font-semibold tracking-widest text-pink-600 uppercase">TrendClothes Exclusive</span>
+            <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mt-2 mb-6">Redefine Tu Estilo</h2>
+            <p class="text-lg text-gray-600 mb-8">
+              En TrendClothes no solo vendemos ropa, creamos tendencias. Nuestra nueva colección fusiona 
+              el streetwear urbano con elegancia contemporánea para ofrecerte piezas únicas que harán 
+              destacar tu estilo personal. Cada prenda está diseñada pensando en tu comodidad y en hacer 
+              una declaración de moda.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4">
+              <a href="#" class="px-8 py-3 bg-black text-white font-bold rounded-full hover:bg-gray-800 transition text-center">
+                Descubrir Colección
+              </a>
+              <a href="#" class="px-8 py-3 border-2 border-black text-black font-bold rounded-full hover:bg-gray-100 transition text-center">
+                Ver Lookbook
+              </a>
+            </div>
+            <div class="mt-8 flex items-center space-x-4">
+              <div class="flex -space-x-2">
+                <img class="w-10 h-10 rounded-full border-2 border-white" src="https://randomuser.me/api/portraits/women/44.jpg" alt="Cliente satisfecha">
+                <img class="w-10 h-10 rounded-full border-2 border-white" src="https://randomuser.me/api/portraits/men/32.jpg" alt="Cliente satisfecho">
+                <img class="w-10 h-10 rounded-full border-2 border-white" src="https://randomuser.me/api/portraits/women/68.jpg" alt="Cliente satisfecha">
+              </div>
+              <div>
+                <p class="text-sm font-medium text-gray-900">+5,000 clientes</p>
+                <p class="text-sm text-gray-500">confían en nosotros</p>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-  </AppLayout>
+
+    <!-- Pie de Página -->
+    <footer class="bg-gray-800 text-white py-12">
+      <div class="mx-auto px-4 sm:px-6 lg:px-8" style="max-width: 1440px; width: 100%;">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div>
+            <span class="text-lg font-semibold mb-4 inline-block">TrendClothes</span>
+            <p class="text-gray-400">La mejor selección de moda para todos los estilos.</p>
+          </div>
+          <div>
+            <span class="text-lg font-semibold mb-4 inline-block">Categorías</span>
+            <ul class="space-y-2">
+              <li><Link :href="route('categories.index')" class="text-gray-400 hover:text-white">Todas las categorías</Link></li>
+              <li><a href="#" class="text-gray-400 hover:text-white">Hombre</a></li>
+              <li><a href="#" class="text-gray-400 hover:text-white">Mujer</a></li>
+              <li><a href="#" class="text-gray-400 hover:text-white">Unisex</a></li>
+            </ul>
+          </div>
+          <div>
+            <span class="text-lg font-semibold mb-4 inline-block">Ayuda</span>
+            <ul class="space-y-2">
+              <li><a href="#" class="text-gray-400 hover:text-white">Contacto</a></li>
+              <li><a href="#" class="text-gray-400 hover:text-white">Envíos</a></li>
+              <li><a href="#" class="text-gray-400 hover:text-white">Devoluciones</a></li>
+            </ul>
+          </div>
+          <div>
+            <span class="text-lg font-semibold mb-4 inline-block">Legal</span>
+            <ul class="space-y-2">
+              <li><a href="#" class="text-gray-400 hover:text-white">Términos y condiciones</a></li>
+              <li><a href="#" class="text-gray-400 hover:text-white">Política de privacidad</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+          <p>© 2025 TrendClothes. Todos los derechos reservados.</p>
+        </div>
+      </div>
+    </footer>
+  </div>
 </template>
 
 <script setup>
-import AppLayout from '@/Layouts/AppLayout.vue';
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
+import Dropdown from '@/Components/Dropdown.vue';
+import DropdownLink from '@/Components/DropdownLink.vue';
+import { useCartStore } from '@/stores/cart';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { ShoppingCart, RefreshLeft, ChatLineRound } from '@element-plus/icons-vue';
 
-defineProps({
+// Definir la propiedad de categorías para recibir datos del backend
+const props = defineProps({
   categories: {
     type: Array,
-    required: true
+    default: () => [], // Valor por defecto: un arreglo vacío si no se proporcionan datos
+  },
+});
+
+const page = usePage();
+
+// Almacén del carrito
+const cartStore = useCartStore();
+const cartCount = computed(() => cartStore.count);
+const cartItems = computed(() => cartStore.items);
+
+const mobileMenuOpen = ref(false);
+const subMenuOpen = ref(false);
+
+const formatPrice = (price) => {
+  return new Intl.NumberFormat('es-ES', {
+    style: 'currency',
+    currency: 'EUR',
+  }).format(price);
+};
+
+// Estado de desplazamiento
+const isScrolled = ref(false);
+const handleScroll = () => {
+  isScrolled.value = window.scrollY > 50;
+};
+
+// Estados para el carrusel
+const carouselTrack = ref(null);
+const currentSlide = ref(0);
+const slideGap = 24; // 24px = gap-6 en Tailwind
+
+// Número de diapositivas por vista según el tamaño de la pantalla
+const slidesPerView = ref(3); // Valor por defecto para escritorio
+const updateSlidesPerView = () => {
+  const width = window.innerWidth;
+  if (width < 640) {
+    slidesPerView.value = 1; // Móvil: 1 elemento
+  } else if (width >= 640 && width < 1024) {
+    slidesPerView.value = 2; // Tableta: 2 elementos
+  } else {
+    slidesPerView.value = 3; // Escritorio: 3 elementos
   }
+  updateContainerWidth(); // Recalcular anchos después de cambiar diapositivas por vista
+};
+
+// Calcular dimensiones
+const containerWidth = ref(0);
+const cardWidth = computed(() => {
+  if (containerWidth.value === 0) return 400; // Ancho de respaldo
+  return Math.floor((containerWidth.value - (slideGap * (slidesPerView.value - 1))) / slidesPerView.value);
+});
+
+const totalSlides = computed(() => props.categories.length);
+const currentTranslateX = computed(() => {
+  const slideWidth = cardWidth.value + slideGap;
+  return -(currentSlide.value * slideWidth);
+});
+
+// Funciones del carrusel
+const nextSlide = () => {
+  if (currentSlide.value < totalSlides.value - slidesPerView.value) {
+    currentSlide.value++;
+  } else {
+    currentSlide.value = 0; // Volver al inicio
+  }
+};
+
+const prevSlide = () => {
+  if (currentSlide.value > 0) {
+    currentSlide.value--;
+  } else {
+    currentSlide.value = totalSlides.value - slidesPerView.value; // Volver al final
+  }
+};
+
+const goToSlide = (index) => {
+  currentSlide.value = index;
+};
+
+// Actualizar ancho del contenedor
+const updateContainerWidth = () => {
+  if (carouselTrack.value && carouselTrack.value.parentElement) {
+    containerWidth.value = carouselTrack.value.parentElement.offsetWidth;
+  }
+};
+
+// Inicialización
+onMounted(() => {
+  cartStore.loadFromLocalStorage();
+  window.addEventListener('scroll', handleScroll);
+  window.addEventListener('resize', updateContainerWidth);
+  window.addEventListener('resize', updateSlidesPerView); // Agregar listener para diapositivas por vista
+  updateContainerWidth();
+  updateSlidesPerView(); // Llamada inicial para establecer diapositivas por vista
+});
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll);
+  window.removeEventListener('resize', updateContainerWidth);
+  window.removeEventListener('resize', updateSlidesPerView); // Limpieza
 });
 </script>
+
+<style>
+/* Animaciones */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 1s ease-out forwards;
+}
+
+.delay-100 {
+  animation-delay: 100ms;
+}
+
+.delay-200 {
+  animation-delay: 200ms;
+}
+
+/* Efecto Marquee */
+.marquee-container {
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.marquee-content {
+  display: inline-flex;
+  animation: marquee 40s linear infinite;
+}
+
+.marquee-item {
+  margin-right: 20px;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-100%); }
+}
+
+/* Estilos del encabezado para estado desplazado */
+nav {
+  background-color: transparent;
+}
+
+nav.scrolled {
+  background-color: rgba(243, 244, 246, 0.9);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Estilos del carrusel */
+.carousel-card {
+  height: 600px;
+}
+</style>

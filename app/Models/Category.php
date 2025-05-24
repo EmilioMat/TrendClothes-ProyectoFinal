@@ -4,29 +4,28 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
-use Spatie\Sluggable\SlugOptions;
 use Spatie\Sluggable\HasSlug;
+use Spatie\Sluggable\SlugOptions;
+use Illuminate\Support\Facades\Storage;
 
 class Category extends Model
 {
     use HasSlug;
     use HasFactory;
 
-    protected $fillable = ['name', 'description'];
+    protected $fillable = ['name', 'description', 'image'];
+    protected $appends = ['image_url'];
 
-    // Generar slug automáticamente
-    public static function boot()
+    public function products()
     {
-        parent::boot();
+        return $this->hasMany(Product::class);
+    }
 
-        static::creating(function ($category) {
-            $category->slug = Str::slug($category->name);
-        });
-
-        static::updating(function ($category) {
-            $category->slug = Str::slug($category->name);
-        });
+    public function getSlugOptions(): SlugOptions
+    {
+        return SlugOptions::create()
+            ->generateSlugsFrom('name')
+            ->saveSlugsTo('slug');
     }
 
     public function getRouteKeyName()
@@ -34,14 +33,11 @@ class Category extends Model
         return 'slug';
     }
 
-    public function products()
+    public function getImageUrlAttribute()
     {
-        return $this->hasMany(Product::class);
-    }
-    public function getSlugOptions(): SlugOptions
-    {
-        return SlugOptions::create()
-            ->generateSlugsFrom('name')
-            ->saveSlugsTo('slug');
+        if (!$this->image) {
+            return 'https://via.placeholder.com/150?text=No+Image';
+        }
+        return Storage::url($this->image); // Generates /storage/categories/filename
     }
 }

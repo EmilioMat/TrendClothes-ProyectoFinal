@@ -10,21 +10,24 @@ use Inertia\Inertia;
 
 class CategoryController extends Controller
 {
-    public function index()
-    {
-        $categories = Category::withCount('products')->get();
-        return Inertia::render('Categories/Index', [
-            'categories' => $categories->map(function ($category) {
-                return [
-                    'id' => $category->id,
-                    'name' => $category->name,
-                    'slug' => $category->slug,
-                    'description' => $category->description,
-                    'products_count' => $category->products_count,
-                ];
-            })
-        ]);
-    }
+public function index()
+{
+    $categories = Category::withCount('products')->get();
+
+    return Inertia::render('Categories/Index', [
+        'categories' => $categories->map(function ($category) {
+            return [
+                'id' => $category->id,
+                'name' => $category->name,
+                'slug' => $category->slug,
+                'description' => $category->description,
+                'products_count' => $category->products_count,
+                'image_url' => $category->image_url,
+            ];
+        })
+    ]);
+}
+
 
 public function show(Request $request, $slug)
 {

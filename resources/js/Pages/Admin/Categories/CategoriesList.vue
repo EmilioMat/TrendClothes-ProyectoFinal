@@ -6,6 +6,7 @@ import { debounce } from "lodash";
 const props = defineProps({
     categories: Object,
 });
+console.log('Categories data:', props.categories.data);
 
 // Estado del componente
 const isAddCategory = ref(false);
@@ -17,10 +18,18 @@ const showCheckboxes = ref(false);
 const showDeleteModal = ref(false);
 const showSuccessMessage = ref(false);
 const showErrorModal = ref(false);
-const errorMessage = ref('');
+const errorMessage = ref("");
 const deleteAllMode = ref(false);
-const searchQuery = ref('');
-const activeDropdown = ref(null); // Para rastrear el dropdown abierto
+const searchQuery = ref("");
+const activeDropdown = ref(null);
+
+// Validación
+const validationModalVisible = ref(false);
+const validationErrors = ref([]);
+
+// Estado para la previsualización de la imagen
+const imagePreview = ref(null);
+const currentImageUrl = ref(null);
 
 // Acceder a los mensajes flash
 const flash = computed(() => usePage().props.flash);
@@ -29,7 +38,7 @@ const flash = computed(() => usePage().props.flash);
 watch(flash, (newFlash) => {
     if (newFlash.success) {
         showSuccessMessage.value = true;
-        setTimeout(() => showSuccessMessage.value = false, 3000);
+        setTimeout(() => (showSuccessMessage.value = false), 3000);
     }
     if (newFlash.error) {
         errorMessage.value = newFlash.error;
@@ -42,7 +51,23 @@ const form = ref({
     id: "",
     name: "",
     description: "",
+    image: null,
 });
+
+// Manejar subida de imagen con previsualización
+const handleImageUpload = (event) => {
+    const file = event.target.files[0];
+    form.value.image = file;
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            imagePreview.value = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    } else {
+        imagePreview.value = null;
+    }
+};
 
 // Computadas para la paginación
 const currentPage = computed(() => props.categories.current_page || 1);
@@ -57,30 +82,34 @@ const categoryList = computed(() => props.categories?.data || []);
 // Generar array de páginas para mostrar
 const pages = computed(() => {
     if (!props.categories) return [];
-    
+
     const range = [];
     const maxVisible = 5;
     let start = Math.max(1, currentPage.value - Math.floor(maxVisible / 2));
     let end = Math.min(lastPage.value, start + maxVisible - 1);
-    
+
     if (end - start + 1 < maxVisible) {
         start = Math.max(1, end - maxVisible + 1);
     }
-    
+
     for (let i = start; i <= end; i++) {
         range.push(i);
     }
-    
+
     return range;
 });
 
 // Métodos de paginación
 function goToPage(page) {
-    router.get(route('admin.categories.index'), { page }, {
-        preserveState: true,
-        replace: true,
-    });
-    activeDropdown.value = null; // Cerrar dropdown al cambiar de página
+    router.get(
+        route("admin.categories.index"),
+        { page, search: searchQuery.value },
+        {
+            preserveState: true,
+            replace: true,
+        }
+    );
+    activeDropdown.value = null;
 }
 
 function nextPage() {
@@ -97,7 +126,8 @@ function previousPage() {
 
 // Toggle dropdown
 const toggleDropdown = (categoryId) => {
-    activeDropdown.value = activeDropdown.value === categoryId ? null : categoryId;
+    activeDropdown.value =
+        activeDropdown.value === categoryId ? null : categoryId;
 };
 
 // Reset form data
@@ -106,7 +136,10 @@ const resetForm = () => {
         id: "",
         name: "",
         description: "",
+        image: null,
     };
+    imagePreview.value = null;
+    currentImageUrl.value = null;
 };
 
 // Abrir modal para editar
@@ -115,10 +148,14 @@ const openEditModal = (category) => {
         id: category.id,
         name: category.name,
         description: category.description,
+        image: null,
     };
+    console.log('Edit modal image_url:', category.image_url);
+    currentImageUrl.value = category.image_url;
+    imagePreview.value = null;
     editMode.value = true;
     dialogVisible.value = true;
-    activeDropdown.value = null; // Cerrar dropdown al abrir el modal
+    activeDropdown.value = null;
 };
 
 // Abrir modal para añadir
@@ -126,31 +163,127 @@ const openAddModal = () => {
     resetForm();
     editMode.value = false;
     dialogVisible.value = true;
-    activeDropdown.value = null; // Cerrar dropdown al abrir el modal
+    activeDropdown.value = null;
 };
 
 // Manejar cierre del modal
 const handleClose = (done) => {
     done();
-    activeDropdown.value = null; // Cerrar dropdown al cerrar el modal
+    resetForm();
+    activeDropdown.value = null;
+};
+
+// Validar formulario
+const validateForm = () => {
+    validationErrors.value = [];
+
+    if (!form.value.name) {
+        validationErrors.value.push("El nombre es obligatorio");
+    } else if (!/^[a-zA-Z0-9\sáéíóúÁÉÍÓÚñÑ\-]+$/.test(form.value.name)) {
+        validationErrors.value.push(
+            "El nombre solo puede contener letras, números y guiones"
+        );
+    } else if (form.value.name.length > 255) {
+        validationErrors.value.push(
+            "El nombre no puede exceder los 255 caracteres"
+        );
+    }
+
+    if (
+        form.value.description &&
+        !/^[a-zA-Z0-9\sáéíóúÁÉÍÓÚñÑ\-.,;:!?¿¡()]+$/.test(form.value.description)
+    ) {
+        validationErrors.value.push(
+            "La descripción contiene caracteres no permitidos"
+        );
+    } else if (form.value.description && form.value.description.length > 1000) {
+        validationErrors.value.push(
+            "La descripción no puede exceder los 1000 caracteres"
+        );
+    }
+
+    if (!editMode.value && !form.value.image) {
+        validationErrors.value.push("La imagen es obligatoria");
+    } else if (form.value.image instanceof File) {
+        const validTypes = [
+            "image/jpeg",
+            "image/png",
+            "image/jpg",
+            "image/gif",
+            "image/webp",
+        ];
+        if (!validTypes.includes(form.value.image.type)) {
+            validationErrors.value.push(
+                "Formatos de imagen permitidos: jpeg, png, jpg, gif, webp"
+            );
+        } else if (form.value.image.size > 2048 * 1024) {
+            validationErrors.value.push("La imagen no debe superar los 2MB");
+        }
+    }
+
+    if (validationErrors.value.length > 0) {
+        validationModalVisible.value = true;
+        return false;
+    }
+
+    return true;
 };
 
 // Guardar categoría
-const saveCategory = () => {
-    if (editMode.value) {
-        router.post(route('admin.categories.update', form.value.id), form.value, {
-            onSuccess: () => {
-                dialogVisible.value = false;
-                activeDropdown.value = null; // Cerrar dropdown después de actualizar
-            },
-        });
-    } else {
-        router.post(route('admin.categories.store'), form.value, {
-            onSuccess: () => {
-                dialogVisible.value = false;
-                activeDropdown.value = null; // Cerrar dropdown después de agregar
-            },
-        });
+const saveCategory = async () => {
+    if (!validateForm()) return;
+
+    const formData = new FormData();
+    formData.append("name", form.value.name);
+    formData.append("description", form.value.description);
+
+    if (form.value.image instanceof File) {
+        formData.append("image", form.value.image);
+    }
+
+    const config = {
+        headers: {
+            "Content-Type": "multipart/form-data",
+        },
+    };
+
+    try {
+        if (editMode.value) {
+            formData.append("_method", "post");
+            await router.post(
+                route("admin.categories.update", form.value.id),
+                formData,
+                {
+                    ...config,
+                    onSuccess: () => {
+                        dialogVisible.value = false;
+                        resetForm();
+                        router.reload({ only: ["categories"] });
+                    },
+                    onError: (errors) => {
+                        showErrorModal.value = true;
+                        errorMessage.value = Object.values(errors).join("\n");
+                    },
+                }
+            );
+        } else {
+            await router.post(route("admin.categories.store"), formData, {
+                ...config,
+                onSuccess: () => {
+                    dialogVisible.value = false;
+                    resetForm();
+                    router.reload({ only: ["categories"] });
+                },
+                onError: (errors) => {
+                    showErrorModal.value = true;
+                    errorMessage.value = Object.values(errors).join("\n");
+                },
+            });
+        }
+    } catch (error) {
+        console.error("Error saving category:", error);
+        showErrorModal.value = true;
+        errorMessage.value = "Ocurrió un error al guardar la categoría.";
     }
 };
 
@@ -169,13 +302,15 @@ const toggleCheckboxes = () => {
         selectedCategories.value = [];
         selectAll.value = false;
     }
-    activeDropdown.value = null; // Cerrar dropdown al alternar checkboxes
+    activeDropdown.value = null;
 };
 
 // Toggle select all categories
 const toggleSelectAll = () => {
     if (selectAll.value) {
-        selectedCategories.value = categoryList.value.map(category => category.id);
+        selectedCategories.value = categoryList.value.map(
+            (category) => category.id
+        );
     } else {
         selectedCategories.value = [];
     }
@@ -188,37 +323,42 @@ const openDeleteModal = () => {
         return;
     }
     showDeleteModal.value = true;
-    activeDropdown.value = null; // Cerrar dropdown al abrir el modal
+    activeDropdown.value = null;
 };
 
 // Abrir modal para eliminar todo
 const openDeleteAllModal = () => {
     deleteAllMode.value = true;
     showDeleteModal.value = true;
-    activeDropdown.value = null; // Cerrar dropdown al abrir el modal
+    activeDropdown.value = null;
 };
 
 // Confirmar eliminación
 const confirmDelete = () => {
     if (deleteAllMode.value) {
-        router.post(route('admin.categories.delete-all'), {}, {
-            onSuccess: () => {
-                selectedCategories.value = [];
-                selectAll.value = false;
-                showCheckboxes.value = false;
-                showDeleteModal.value = false;
-                deleteAllMode.value = false;
-                activeDropdown.value = null;
-            },
-        });
+        router.post(
+            route("admin.categories.delete-all"),
+            {},
+            {
+                onSuccess: () => {
+                    selectedCategories.value = [];
+                    selectAll.value = false;
+                    showCheckboxes.value = false;
+                    showDeleteModal.value = false;
+                    deleteAllMode.value = false;
+                    activeDropdown.value = null;
+                },
+            }
+        );
     } else {
         if (selectedCategories.value.length === 0) {
             showDeleteModal.value = false;
             return;
         }
-        
-        router.post(route('admin.categories.delete-multiple'), 
-            { ids: selectedCategories.value }, 
+
+        router.post(
+            route("admin.categories.delete-multiple"),
+            { ids: selectedCategories.value },
             {
                 onSuccess: () => {
                     selectedCategories.value = [];
@@ -234,13 +374,15 @@ const confirmDelete = () => {
 
 // Búsqueda con debounce
 const performSearch = debounce(() => {
-    router.get(route('admin.categories.index'), 
+    router.get(
+        route("admin.categories.index"),
         { search: searchQuery.value },
         {
             preserveState: true,
-            replace: true
-        });
-    activeDropdown.value = null; // Cerrar dropdown al buscar
+            replace: true,
+        }
+    );
+    activeDropdown.value = null;
 }, 300);
 
 // Lifecycle hooks for dropdown management
@@ -252,17 +394,26 @@ onUnmounted(() => {
     document.removeEventListener("click", closeDropdownsOnOutsideClick);
 });
 
-watch(() => props.categories.current_page, () => {
-    activeDropdown.value = null; // Cerrar dropdown al cambiar de página
-});
+watch(
+    () => props.categories.current_page,
+    () => {
+        activeDropdown.value = null;
+    }
+);
 
-watch(() => searchQuery.value, () => {
-    activeDropdown.value = null; // Cerrar dropdown al buscar
-});
+watch(
+    () => searchQuery.value,
+    () => {
+        activeDropdown.value = null;
+    }
+);
 
 // Cerrar dropdowns al hacer clic fuera
 const closeDropdownsOnOutsideClick = (e) => {
-    if (!e.target.closest('[id^="action-button-"]') && !e.target.closest('[id^="dropdown-"]')) {
+    if (
+        !e.target.closest('[id^="action-button-"]') &&
+        !e.target.closest('[id^="dropdown-"]')
+    ) {
         activeDropdown.value = null;
     }
 };
@@ -277,35 +428,136 @@ const closeDropdownsOnOutsideClick = (e) => {
             width="30%"
             :before-close="handleClose"
         >
-            <form @submit.prevent="saveCategory">
+            <form @submit.prevent="saveCategory" class="grid grid-cols-1 gap-6">
                 <!-- Nombre -->
                 <div class="mb-4">
-                    <label class="block text-gray-700">Nombre</label>
+                    <label class="block text-gray-700 font-medium mb-1"
+                        >Nombre *</label
+                    >
                     <input
                         v-model="form.name"
                         type="text"
-                        class="w-full border-gray-300 rounded-md"
+                        class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         required
                     />
                 </div>
 
                 <!-- Descripción -->
                 <div class="mb-4">
-                    <label class="block text-gray-700">Descripción</label>
+                    <label class="block text-gray-700 font-medium mb-1"
+                        >Descripción</label
+                    >
                     <textarea
                         v-model="form.description"
-                        class="w-full border-gray-300 rounded-md"
+                        class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-24"
                     ></textarea>
                 </div>
 
+                <!-- Imagen -->
+                <div class="mb-4">
+                    <label class="block text-gray-700 font-medium mb-1"
+                        >Imagen *</label
+                    >
+                    <label
+                        class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-blue-300 rounded-lg bg-white hover:bg-gray-50 transition-colors cursor-pointer"
+                    >
+                        <div
+                            class="flex flex-col items-center justify-center pt-5 pb-6"
+                        >
+                            <svg
+                                class="w-8 h-8 text-blue-500"
+                                aria-hidden="true"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 20 16"
+                            >
+                                <path
+                                    stroke="currentColor"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
+                                />
+                            </svg>
+                            <p class="mt-2 text-sm text-gray-600">
+                                Haga clic para cargar o arrastre y suelte
+                            </p>
+                            <p class="text-xs text-gray-500">
+                                PNG, JPG, GIF, WEBP (MÁX. 2MB)
+                            </p>
+                        </div>
+                        <input
+                            type="file"
+                            accept="image/jpeg,image/png,image/jpg,image/gif,image/webp"
+                            @change="handleImageUpload"
+                            class="hidden"
+                        />
+                    </label>
+                    <!-- Previsualización de la imagen -->
+                    <div v-if="imagePreview || currentImageUrl" class="mt-2">
+                        <img
+                            :src="imagePreview || currentImageUrl"
+                            alt="Vista previa de la imagen"
+                            class="w-32 h-32 object-cover rounded-lg shadow-md"
+                        />
+                    </div>
+                </div>
+
                 <!-- Botón de enviar -->
-                <button
-                    type="submit"
-                    class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
-                >
-                    {{ editMode ? "Actualizar" : "Guardar" }}
-                </button>
+                <div class="flex justify-end">
+                    <button
+                        type="submit"
+                        class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 font-medium transition-colors"
+                    >
+                        {{
+                            editMode
+                                ? "Actualizar Categoría"
+                                : "Crear Categoría"
+                        }}
+                    </button>
+                </div>
             </form>
+        </el-dialog>
+
+        <!-- Modal de Validación -->
+        <el-dialog
+            v-model="validationModalVisible"
+            title="Errores de Validación"
+            width="30%"
+        >
+            <div class="text-sm text-gray-600 dark:text-gray-400">
+                <p>Por favor corrija los siguientes errores:</p>
+                <ul class="mt-2">
+                    <li
+                        v-for="error in validationErrors"
+                        :key="error"
+                        class="list-disc ml-5"
+                    >
+                        {{ error }}
+                    </li>
+                </ul>
+            </div>
+            <template #footer>
+                <span class="dialog-footer">
+                    <el-button @click="validationModalVisible = false"
+                        >Cerrar</el-button
+                    >
+                </span>
+            </template>
+        </el-dialog>
+
+        <!-- Modal de Error -->
+        <el-dialog v-model="showErrorModal" title="Error" width="30%">
+            <p class="text-sm text-gray-600 dark:text-gray-400">
+                {{ errorMessage }}
+            </p>
+            <template #footer>
+                <span class="dialog-footer">
+                    <el-button type="primary" @click="showErrorModal = false">
+                        Entendido
+                    </el-button>
+                </span>
+            </template>
         </el-dialog>
 
         <!-- Modal de confirmación para eliminar -->
@@ -336,27 +588,6 @@ const closeDropdownsOnOutsideClick = (e) => {
                     <el-button type="danger" @click="confirmDelete"
                         >Eliminar</el-button
                     >
-                </span>
-            </template>
-        </el-dialog>
-
-        <!-- Modal de error -->
-        <el-dialog
-            v-model="showErrorModal"
-            title="Error al eliminar"
-            width="30%"
-        >
-            <p class="text-sm text-gray-600 dark:text-gray-400">
-                {{ errorMessage }}
-            </p>
-            <template #footer>
-                <span class="dialog-footer">
-                    <el-button 
-                        type="primary" 
-                        @click="showErrorModal = false"
-                    >
-                        Entendido
-                    </el-button>
                 </span>
             </template>
         </el-dialog>
@@ -530,6 +761,7 @@ const closeDropdownsOnOutsideClick = (e) => {
                                 <th scope="col" class="px-4 py-3">
                                     Total Productos
                                 </th>
+                                <th scope="col" class="px-4 py-3">Imagen</th>
                                 <th scope="col" class="px-4 py-3">
                                     <span class="sr-only">Acciones</span>
                                 </th>
@@ -561,6 +793,21 @@ const closeDropdownsOnOutsideClick = (e) => {
                                 <td class="px-4 py-3">
                                     {{ category.products_count }}
                                 </td>
+                                <td class="px-4 py-3">
+                                    <img
+                                        v-if="category.image_url"
+                                        :src="category.image_url"
+                                        alt="Imagen de categoría"
+                                        class="h-10 w-10 object-cover rounded"
+                                        @error="
+                                            console.log(
+                                                'Image failed to load:',
+                                                category.image_url
+                                            )
+                                        "
+                                    />
+                                    <span v-else>N/A</span>
+                                </td>
                                 <td
                                     class="px-4 py-3 flex items-center justify-end relative"
                                 >
@@ -587,7 +834,6 @@ const closeDropdownsOnOutsideClick = (e) => {
                                             />
                                         </svg>
                                     </button>
-
                                     <div
                                         :id="`dropdown-${category.id}`"
                                         class="dropdown-menu absolute right-0 top-10 z-10 w-40 bg-white rounded-xl shadow-lg dark:bg-gray-800 dark:shadow-gray-900 overflow-hidden"
@@ -671,8 +917,6 @@ const closeDropdownsOnOutsideClick = (e) => {
                                 </svg>
                             </button>
                         </li>
-
-                        <!-- Botones de páginas -->
                         <li v-for="page in pages" :key="page">
                             <button
                                 @click="goToPage(page)"
@@ -687,7 +931,6 @@ const closeDropdownsOnOutsideClick = (e) => {
                                 {{ page }}
                             </button>
                         </li>
-
                         <li>
                             <button
                                 @click="nextPage"
@@ -718,7 +961,6 @@ const closeDropdownsOnOutsideClick = (e) => {
 </template>
 
 <style scoped>
-/* Estilo para el dropdown */
 .dropdown-menu {
     opacity: 0;
     transform: scale(0.95);
@@ -736,12 +978,10 @@ const closeDropdownsOnOutsideClick = (e) => {
     pointer-events: none;
 }
 
-/* Transiciones suaves para el fondo y texto */
 .transition-colors {
     transition: background-color 0.15s ease, color 0.15s ease;
 }
 
-/* Estilos existentes */
 .fade-enter-active,
 .fade-leave-active {
     transition: opacity 0.3s ease;
