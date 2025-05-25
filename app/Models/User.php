@@ -76,4 +76,19 @@ class User extends Authenticatable
 
         return asset('storage/' . $this->avatar);
     }
+
+    public function addresses()
+    {
+        return $this->hasMany(UserAddress::class);
+    }
+
+    public function mainAddress()
+    {
+        return $this->hasOne(UserAddress::class)->where('is_main', true);
+    }
+
+    public function cartItems()
+    {
+        return $this->hasMany(CartItem::class);
+    }
 }
