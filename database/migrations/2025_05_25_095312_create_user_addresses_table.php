@@ -22,7 +22,7 @@ return new class extends Migration
             $table->boolean('is_main')->default(false);
             $table->timestamps();
         });
-    }
+    } 
 
     /**
      * Reverse the migrations.

@@ -225,7 +225,7 @@ const submitAddress = () => {
     onError: (formErrors) => {
       errors.value = formErrors;
     },
-  });
+  }); 
 };
 
 // Método para enviar el formulario de checkout

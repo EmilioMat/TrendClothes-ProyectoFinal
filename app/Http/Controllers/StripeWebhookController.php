@@ -57,7 +57,7 @@ class StripeWebhookController extends Controller
         ]);
 
         $payment->order->update(['status' => 'completed']);
-    }
+    } 
 
     protected function handlePaymentFailed($paymentIntent)
     {

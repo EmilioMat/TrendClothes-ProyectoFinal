@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('transaction_id')->nullable();
             $table->timestamps();
         });
-    }
+    } 
 
     /**
      * Reverse the migrations.

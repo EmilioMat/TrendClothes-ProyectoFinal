@@ -43,7 +43,7 @@ public function store(Request $request)
             'price' => Product::find($item['product_id'])->price,
             'size' => $item['size'] ?? null
         ]);
-    }
+    } 
 
     // Configurar Stripe
     Stripe::setApiKey(env('STRIPE_SECRET'));

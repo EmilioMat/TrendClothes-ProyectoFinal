@@ -17,7 +17,7 @@ class UserAddress extends Model
         'zip_code',
         'country',
         'is_main'
-    ];
+    ]; 
 
     public function user()
     {

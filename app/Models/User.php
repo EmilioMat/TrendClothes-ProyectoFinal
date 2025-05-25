@@ -65,7 +65,7 @@ class User extends Authenticatable
     public function getIsAdminAttribute()
     {
         return $this->role === 'admin';
-    }
+    } 
 
     // Método para obtener la URL del avatar
     public function getAvatarUrlAttribute()

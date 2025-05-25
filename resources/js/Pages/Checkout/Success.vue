@@ -24,4 +24,4 @@ import { Link } from '@inertiajs/vue3';
 defineProps({
   order: Object
 });
-</script>
+</script> 

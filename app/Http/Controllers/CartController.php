@@ -32,7 +32,7 @@ class CartController extends Controller
             'addresses' => $addresses,
             'address' => $request->query('address'),
         ]);
-    }
+    } 
 
     public function success()
     {

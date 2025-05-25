@@ -24,7 +24,7 @@
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { Link } from '@inertiajs/vue3';
 
-defineProps({
+defineProps({ 
   order: Object
 });
 </script>

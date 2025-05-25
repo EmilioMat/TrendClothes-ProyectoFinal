@@ -48,7 +48,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/checkout/cancel/{order}', [CheckoutController::class, 'cancel'])->name('checkout.cancel');
     Route::post('/stripe/webhook', [StripeWebhookController::class, 'handleWebhook']);
 Route::post('/addresses', [AddressController::class, 'store'])->name('addresses.store')->middleware('auth');
-});
+}); 
 
 // Rutas públicas de productos y carrito
 Route::get('/carrito', [CartController::class, 'index'])->name('cart.index');
