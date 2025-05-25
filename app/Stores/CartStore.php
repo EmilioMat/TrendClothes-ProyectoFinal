@@ -105,7 +105,7 @@ class CartStore
 
     public function clear()
     {
-        if (!Auth::check()) {
+        if (!Auth::check()) { 
             return;
         }
 

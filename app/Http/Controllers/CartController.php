@@ -33,7 +33,7 @@ class CartController extends Controller
             'address' => $request->query('address'),
         ]);
     } 
-
+ 
     public function success()
     {
         $cart = app(CartStore::class);

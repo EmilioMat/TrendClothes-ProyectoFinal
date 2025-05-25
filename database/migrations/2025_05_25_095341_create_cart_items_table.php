@@ -19,7 +19,7 @@ Schema::create('cart_items', function (Blueprint $table) {
     $table->string('size')->nullable();
     $table->timestamps();
 });
-    } 
+    }  
 
     /**
      * Reverse the migrations.

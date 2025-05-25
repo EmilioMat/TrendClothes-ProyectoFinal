@@ -44,7 +44,7 @@ public function store(Request $request)
             'size' => $item['size'] ?? null
         ]);
     } 
-
+ 
     // Configurar Stripe
     Stripe::setApiKey(env('STRIPE_SECRET'));
     

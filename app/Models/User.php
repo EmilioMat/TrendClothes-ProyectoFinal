@@ -69,7 +69,7 @@ class User extends Authenticatable
 
     // Método para obtener la URL del avatar
     public function getAvatarUrlAttribute()
-    {
+    { 
         if (!$this->avatar) {
             return 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&color=7F9CF5&background=EBF4FF';
         }

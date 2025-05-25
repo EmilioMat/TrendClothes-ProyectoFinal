@@ -37,4 +37,4 @@ class AddressController extends Controller
 
         return response()->json(['address' => $address]);
     }
-} 
+}  

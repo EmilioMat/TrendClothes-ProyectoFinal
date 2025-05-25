@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('country');
             $table->boolean('is_main')->default(false);
             $table->timestamps();
-        });
+        }); 
     } 
 
     /**

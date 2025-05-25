@@ -19,7 +19,7 @@ class UserAddress extends Model
         'is_main'
     ]; 
 
-    public function user()
+    public function user() 
     {
         return $this->belongsTo(User::class);
     }

@@ -6,7 +6,7 @@ export const useCartStore = defineStore('cart', {
     items: [],
     count: 0,
   }),
-  actions: { 
+  actions: {  
 
 addItem(product, size = null) {
   if (!product || !product.id || !product.name || !product.price) {
