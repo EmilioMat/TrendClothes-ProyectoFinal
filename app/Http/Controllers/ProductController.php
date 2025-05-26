@@ -199,38 +199,35 @@ class ProductController extends Controller
         return redirect()->route('admin.products.index')->with('success', 'Product deleted successfully.');
     }
 
-    public function show(Product $product)
-    {
-        $product->load(['category', 'sizes', 'product_images']);
-
-
-        // Obtener todas las tallas disponibles para productos similares
-        $availableSizes = Size::whereHas('products', function ($query) use ($product) {
-            $query->where('category_id', $product->category_id)
-                ->where('gender', $product->gender);
-        })->pluck('name')->toArray();
-
-        return Inertia::render('Products/Show', [
-            'product' => [
-                'id' => $product->id,
-                'name' => $product->name,
-                'slug' => $product->slug,
-                'description' => $product->description,
-                'price' => $product->price,
-                'stock' => $product->stock,
-                'gender' => $product->gender,
-                'size' => optional($product->sizes->first())->name,
-                'sizes' => $availableSizes ?: [optional($product->sizes->first())->name],
-                'category' => $product->category->name,
-                'main_image' => $product->main_image ? Storage::url($product->main_image) : null,
-                'images' => $product->product_images->map(function ($image) {
-                    return Storage::url($image->image_path);
-                })->toArray(),
-                'brand' => $product->brand,
-                'color' => $product->color
-            ]
-        ]);
-    }
+public function show(Product $product)
+{
+    $product->load(['category', 'sizes', 'product_images']);
+    
+    return Inertia::render('Products/Show', [
+        'product' => [
+            'id' => $product->id,
+            'name' => $product->name,
+            'description' => $product->description,
+            'price' => $product->price,
+            'category' => $product->category->name,
+            'gender' => $product->gender,
+            'brand' => $product->brand,
+            'color' => $product->color,
+            'main_image' => $product->main_image ? Storage::url($product->main_image) : null,
+            'images' => $product->product_images->map(function ($image) {
+                return Storage::url($image->image_path);
+            }),
+             'sizes' => $product->sizes->map(function ($size) {
+                return [
+                    'id' => $size->id,
+                    'name' => $size->name,
+                    'pivot' => ['stock' => $size->pivot->stock]
+                ];
+            }), 
+            'stock' => $product->stock
+        ]
+    ]);
+}
     public function togglePublish($id)
     {
         $product = Product::findOrFail($id);

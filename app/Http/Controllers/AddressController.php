@@ -9,7 +9,7 @@ use Inertia\Inertia;
 
 class AddressController extends Controller
 {
-    public function store(Request $request)
+ public function store(Request $request)
     {
         $validated = $request->validate([
             'address' => 'required|string|max:255',
@@ -19,22 +19,19 @@ class AddressController extends Controller
             'country' => 'required|string|max:100',
         ]);
 
-        // Desmarcar cualquier dirección principal existente
-        UserAddress::where('user_id', Auth::id())
-            ->where('is_main', true)
-            ->update(['is_main' => false]);
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
 
-        // Crear la nueva dirección
-        $address = UserAddress::create([
-            'user_id' => Auth::id(),
-            'address' => $validated['address'],
-            'city' => $validated['city'],
-            'state' => $validated['state'],
-            'zip_code' => $validated['zip_code'],
-            'country' => $validated['country'],
-            'is_main' => true,
-        ]);
+        // Create the address
+        $address = $user->addresses()->create(array_merge($validated, [
+            'is_main' => $user->addresses()->count() === 0, // Set as main if it's the first address
+        ]));
 
-        return response()->json(['address' => $address]);
+        // Fetch updated addresses
+        $addresses = $user->addresses()->get()->toArray();
+
+        // Return Inertia response
+        return redirect()->route('cart.index', ['address' => $address->id])
+            ->with('success', 'Dirección añadida correctamente');
     }
 }  

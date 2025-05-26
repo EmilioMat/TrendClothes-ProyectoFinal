@@ -4,6 +4,14 @@
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h1 class="text-3xl font-bold text-gray-900 mb-8">Mi cesta</h1>
         
+        <!-- Display flash messages -->
+        <div v-if="flash.success" class="mb-4 p-4 bg-green-100 text-green-700 rounded-md">
+          {{ flash.success }}
+        </div>
+        <div v-if="flash.error" class="mb-4 p-4 bg-red-100 text-red-700 rounded-md">
+          {{ flash.error }}
+        </div>
+
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <!-- Lista de productos -->
           <div class="lg:col-span-2">
@@ -20,11 +28,11 @@
               </div>
               
               <div class="space-y-6">
-                <div v-for="(item, index) in cartItems" :key="index" class="border-b pb-6">
+                <div v-for="(item, index) in cartItems" :key="`${item.product.id}-${item.size}`" class="border-b pb-6">
                   <div class="flex flex-col sm:flex-row">
                     <!-- Imagen del producto -->
                     <div class="flex-shrink-0">
-                      <img :src="item.product.main_image" :alt="item.product.name" class="h-24 w-24 rounded-md object-cover">
+                      <img :src="item.product.main_image_url || '/images/placeholder.jpg'" :alt="item.product.name" class="h-24 w-24 rounded-md object-cover">
                     </div>
                     
                     <!-- Detalles del producto -->
@@ -34,7 +42,7 @@
                         <p class="ml-4 text-lg font-medium text-gray-900">{{ formatPrice(item.product.price) }}</p>
                       </div>
                       
-                      <p class="mt-1 text-sm text-gray-500">Talla: {{ item.size }}</p>
+                      <p class="mt-1 text-sm text-gray-500">Talla: {{ item.size || 'N/A' }}</p>
                       
                       <div class="flex items-center justify-between mt-4">
                         <div class="flex items-center space-x-2">
@@ -92,7 +100,7 @@
                 <div class="mt-6">
                   <h3 class="text-md font-medium text-gray-900 mb-2">Dirección de envío</h3>
                   <select v-model="selectedAddress" class="w-full p-2 border rounded-md">
-                    <option value="">Seleccionar dirección</option>
+                    <option :value="null">Seleccionar dirección</option>
                     <option v-for="address in addresses" :key="address.id" :value="address">
                       {{ address.address }}, {{ address.city }}, {{ address.country }}
                     </option>
@@ -167,11 +175,14 @@ import { defineProps, onMounted, computed, ref } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { Link, useForm } from '@inertiajs/vue3';
 import { useCartStore } from '@/stores/cart';
+import { toast } from 'vue3-toastify';
+import 'vue3-toastify/dist/index.css';
 
 const props = defineProps({
   initialItems: Array,
   addresses: Array,
   address: Object,
+  flash: Object, // Add flash prop to receive success/error messages
 });
 
 const cartStore = useCartStore();
@@ -202,6 +213,10 @@ onMounted(() => {
   } else {
     cartStore.loadFromLocalStorage();
   }
+  // Set selectedAddress if address prop is provided
+  if (props.address) {
+    selectedAddress.value = props.address;
+  }
 });
 
 // Abrir modal si no hay dirección seleccionada
@@ -215,71 +230,91 @@ const openAddressModal = () => {
 
 // Enviar formulario de dirección
 const submitAddress = () => {
-  addressForm.post('/addresses', {
+  addressForm.post(route('addresses.store'), {
     preserveState: true,
-    onSuccess: (response) => {
+    onSuccess: () => {
       showAddressModal.value = false;
-      selectedAddress.value = response.props.address;
-      proceedToCheckout();
+      // Refresh the page to get updated addresses
+      window.location.href = route('cart.index');
     },
     onError: (formErrors) => {
       errors.value = formErrors;
-    }, 
-  }); 
+      toast.error('Error al guardar la dirección: ' + Object.values(formErrors).join(', '), {
+        position: toast.POSITION.TOP_RIGHT,
+        autoClose: 3000,
+      });
+    },
+  });
 };
 
 // Método para enviar el formulario de checkout
 const proceedToCheckout = async () => {
-  if (!selectedAddress.value) {
-    alert('Por favor selecciona una dirección de envío');
-    return;
-  }
+    if (!selectedAddress.value) {
+        toast.error('Por favor selecciona una dirección de envío', {
+            position: toast.POSITION.TOP_RIGHT,
+            autoClose: 3000,
+        });
+        return;
+    }
 
-  const form = useForm({
-    cartItems: cartItems.value.map(item => ({
-      product_id: item.product.id,
-      quantity: item.quantity,
-      size: item.size || null
-    })),
-    total: totalPrice.value,
-    address_id: selectedAddress.value.id
-  });
-
-  try {
-    await form.post(route('checkout.store'), {
-      onSuccess: () => {
-        // Limpiar carrito después de éxito
-        cartStore.clearCart();
-      },
-      onError: (errors) => {
-        console.error('Error en el checkout:', errors);
-        alert('Ocurrió un error al procesar tu pedido');
-      }
+    const form = useForm({
+        total: totalPrice.value,
+        address_id: selectedAddress.value.id,
     });
-  } catch (error) {
-    console.error('Error en la solicitud:', error);
-    alert('Error de conexión al procesar el pago');
-  }
+
+    try {
+        await form.post(route('checkout.store'), {
+            preserveState: true,
+            preserveScroll: true,
+            onSuccess: () => {
+                cartStore.clearCart();
+                toast.success('Pedido procesado correctamente', {
+                    position: toast.POSITION.TOP_RIGHT,
+                    autoClose: 2000,
+                });
+            },
+            onError: (errors) => {
+                console.error('Error en el checkout:', errors);
+                let errorMessage = 'Ocurrió un error al procesar tu pedido';
+                if (errors.error) {
+                    errorMessage = errors.error;
+                } else if (Object.values(errors).length > 0) {
+                    errorMessage += ': ' + Object.values(errors).join(', ');
+                }
+                toast.error(errorMessage, {
+                    position: toast.POSITION.TOP_RIGHT,
+                    autoClose: 5000,
+                });
+            },
+        });
+    } catch (error) {
+        console.error('Error en la solicitud:', error);
+        toast.error('Error de conexión al procesar el pago', {
+            position: toast.POSITION.TOP_RIGHT,
+            autoClose: 5000,
+        });
+    }
 };
 
-// Métodos para actualizar el carrito
 const increaseQuantity = (index) => {
-  cartStore.items[index].quantity += 1;
-  cartStore.updateCount();
-  cartStore.saveToLocalStorage();
+    const item = cartItems.value[index];
+    const itemId = `${item.product.id}-${item.size_id || ''}`;
+    cartStore.updateQuantity(itemId, item.quantity + 1);
 };
 
 const decreaseQuantity = (index) => {
-  if (cartStore.items[index].quantity > 1) {
-    cartStore.items[index].quantity -= 1;
-  } else {
-    cartStore.removeItem(index);
-  }
-  cartStore.updateCount();
-  cartStore.saveToLocalStorage();
+    const item = cartItems.value[index];
+    const itemId = `${item.product.id}-${item.size_id || ''}`;
+    if (item.quantity > 1) {
+        cartStore.updateQuantity(itemId, item.quantity - 1);
+    } else {
+        cartStore.removeItem(itemId);
+    }
 };
 
 const removeItem = (index) => {
-  cartStore.removeItem(index);
+    const item = cartItems.value[index];
+    const itemId = `${item.product.id}-${item.size_id || ''}`;
+    cartStore.removeItem(itemId);
 };
 </script>

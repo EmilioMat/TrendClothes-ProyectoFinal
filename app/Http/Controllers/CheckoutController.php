@@ -12,99 +12,153 @@ use App\Models\UserAddress;
 use App\Models\CartItem;
 use App\Models\Product;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
+use Stripe\Exception\ApiErrorException;
 
 class CheckoutController extends Controller
 {
-public function store(Request $request)
-{
-    $user = $request->user();
-    
-    $validated = $request->validate([
-        'cartItems' => 'required|array',
-        'total' => 'required|numeric',
-        'address_id' => 'required|exists:user_addresses,id'
-    ]);
+    public function store(Request $request)
+    {
+        $user = $request->user();
 
-    // Crear la orden
-    $order = Order::create([
-        'user_id' => $user->id,
-        'total' => $validated['total'],
-        'status' => 'pending',
-        'user_address_id' => $validated['address_id']
-    ]);
+        // Obtener los ítems del carrito del usuario autenticado desde la base de datos
+        $cartItems = $user->cartItems()->with('product')->get();
 
-    // Crear items de la orden
-    foreach ($validated['cartItems'] as $item) {
-        OrderItem::create([
-            'order_id' => $order->id,
-            'product_id' => $item['product_id'],
-            'quantity' => $item['quantity'],
-            'price' => Product::find($item['product_id'])->price,
-            'size' => $item['size'] ?? null
+        if ($cartItems->isEmpty()) {
+            return redirect()->route('cart.index')->with('error', 'Tu carrito está vacío');
+        }
+
+        // Validar dirección y total
+        $validated = $request->validate([
+            'total' => 'required|numeric|min:0',
+            'address_id' => 'required|exists:user_addresses,id',
         ]);
-    } 
- 
-    // Configurar Stripe
-    Stripe::setApiKey(env('STRIPE_SECRET'));
-    
-    $lineItems = [];
-    foreach ($order->orderItems as $item) {
-        $lineItems[] = [
-            'price_data' => [
-                'currency' => 'eur',
-                'product_data' => ['name' => $item->product->name],
-                'unit_amount' => $item->price * 100,
-            ],
-            'quantity' => $item->quantity,
-        ];
+
+        // Verificar stock
+        foreach ($cartItems as $item) {
+            if (!$item->product->hasStock($item->quantity, $item->size_id)) {
+                return back()->with('error', "El producto {$item->product->name} no tiene suficiente stock");
+            }
+        }
+
+        // Crear la orden
+        $order = Order::create([
+            'user_id' => $user->id,
+            'total' => $validated['total'],
+            'status' => 'pending',
+            'user_address_id' => $validated['address_id'],
+        ]);
+
+        // Crear ítems de la orden y reducir stock
+        foreach ($cartItems as $item) {
+            OrderItem::create([
+                'order_id' => $order->id,
+                'product_id' => $item->product_id,
+                'quantity' => $item->quantity,
+                'price' => $item->product->price,
+                'size_id' => $item->size_id,
+                'size' => $item->size,
+            ]);
+
+            $item->product->decreaseStock($item->quantity, $item->size_id);
+        }
+
+        // Configurar Stripe
+        $stripeSecret = env('STRIPE_SECRET');
+        if (!$stripeSecret) {
+            Log::error('STRIPE_SECRET is not set in .env');
+            return redirect()->route('cart.index')->with('error', 'Error de configuración del servidor. Contacta con soporte.');
+        }
+
+        try {
+            Stripe::setApiKey($stripeSecret);
+
+            $lineItems = $order->orderItems->map(function ($item) {
+                return [
+                    'price_data' => [
+                        'currency' => 'eur',
+                        'product_data' => ['name' => $item->product->name],
+                        'unit_amount' => (int) ($item->price * 100),
+                    ],
+                    'quantity' => $item->quantity,
+                ];
+            })->toArray();
+
+            $session = Session::create([
+                'payment_method_types' => ['card'],
+                'line_items' => $lineItems,
+                'mode' => 'payment',
+                'success_url' => route('checkout.success', $order) . '?session_id={CHECKOUT_SESSION_ID}',
+                'cancel_url' => route('checkout.cancel', $order),
+                'customer_email' => $user->email,
+            ]);
+
+            Payment::create([
+                'order_id' => $order->id,
+                'amount' => $order->total,
+                'status' => 'pending',
+                'payment_method' => 'stripe',
+                'transaction_id' => $session->id,
+            ]);
+
+            // Limpiar el carrito después de crear la sesión de Stripe
+            $user->cartItems()->delete();
+
+            return Inertia::location($session->url);
+        } catch (ApiErrorException $e) {
+            Log::error('Stripe API error: ' . $e->getMessage());
+            // Revertir el stock
+            foreach ($order->orderItems as $item) {
+                $item->product->increaseStock($item->quantity, $item->size_id);
+            }
+            return redirect()->route('cart.index')->with('error', 'Error al procesar el pago: ' . $e->getMessage());
+        }
     }
-
-    $session = Session::create([
-        'payment_method_types' => ['card'],
-        'line_items' => $lineItems,
-        'mode' => 'payment',
-        'success_url' => route('checkout.success', $order) . '?session_id={CHECKOUT_SESSION_ID}',
-        'cancel_url' => route('checkout.cancel', $order),
-        'customer_email' => $user->email,
-    ]);
-
-    // Crear registro de pago
-    Payment::create([
-        'order_id' => $order->id,
-        'amount' => $order->total,
-        'status' => 'pending',
-        'payment_method' => 'stripe',
-        'transaction_id' => $session->id,
-    ]);
-
-    return Inertia::location($session->url);
-}
 
     public function success(Request $request, Order $order)
     {
-        // Verificar el pago con Stripe
-        Stripe::setApiKey(env('STRIPE_SECRET'));
-        $session = Session::retrieve($request->query('session_id'));
-
-        if ($session->payment_status === 'paid') {
-            $order->update(['status' => 'completed']);
-            
-            $payment = Payment::where('order_id', $order->id)->first();
-            $payment->update([
-                'status' => 'completed',
-                'transaction_id' => $session->payment_intent
-            ]);
-
-            // Limpiar el carrito
-            CartItem::where('user_id', Auth::id())->delete();
-
-            return Inertia::render('Checkout/Success', [
-                'order' => $order
-            ]);
+        $stripeSecret = env('STRIPE_SECRET');
+        if (!$stripeSecret) {
+            Log::error('STRIPE_SECRET is not set in .env');
+            return redirect()->route('cart.index')->with('error', 'Error de configuración del servidor. Contacta con soporte.');
         }
 
-        return redirect()->route('checkout.cancel', $order);
+        try {
+            Stripe::setApiKey($stripeSecret);
+            $session = Session::retrieve($request->query('session_id'));
+
+            if ($session->payment_status === 'paid') {
+                $order->update(['status' => 'completed']);
+
+                $payment = Payment::where('order_id', $order->id)->first();
+                $payment->update([
+                    'status' => 'completed',
+                    'transaction_id' => $session->payment_intent,
+                ]);
+
+                // Limpiar el carrito
+                CartItem::where('user_id', Auth::id())->delete();
+
+                return Inertia::render('Checkout/Success', [
+                    'order' => $order,
+                ]);
+            }
+
+            // Revertir el stock
+            foreach ($order->orderItems as $item) {
+                $item->product->increaseStock($item->quantity, $item->size_id);
+            }
+
+            return redirect()->route('checkout.cancel', $order);
+        } catch (ApiErrorException $e) {
+            Log::error('Stripe API error in success: ' . $e->getMessage());
+            // Revertir el stock
+            foreach ($order->orderItems as $item) {
+                $item->product->increaseStock($item->quantity, $item->size_id);
+            }
+            return redirect()->route('cart.index')->with('error', 'Error al verificar el pago: ' . $e->getMessage());
+        }
     }
 
     public function cancel(Order $order)
@@ -112,6 +166,11 @@ public function store(Request $request)
         $order->update(['status' => 'cancelled']);
         $payment = Payment::where('order_id', $order->id)->first();
         $payment->update(['status' => 'cancelled']);
+
+        // Revertir el stock
+        foreach ($order->orderItems as $item) {
+            $item->product->increaseStock($item->quantity, $item->size_id);
+        }
 
         return Inertia::render('Checkout/Cancel', [
             'order' => $order

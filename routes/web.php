@@ -43,12 +43,13 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
 
-        Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+    Route::post('/stripe/webhook', [StripeWebhookController::class, 'handleWebhook']);
+    Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
     Route::get('/checkout/success/{order}', [CheckoutController::class, 'success'])->name('checkout.success');
     Route::get('/checkout/cancel/{order}', [CheckoutController::class, 'cancel'])->name('checkout.cancel');
-    Route::post('/stripe/webhook', [StripeWebhookController::class, 'handleWebhook']);
-Route::post('/addresses', [AddressController::class, 'store'])->name('addresses.store')->middleware('auth');
-});  
+    Route::post('/addresses', [AddressController::class, 'store'])->name('addresses.store');
+    Route::post('/cart/add', [CartController::class, 'addItem'])->name('cart.add');
+});
 
 // Rutas públicas de productos y carrito
 Route::get('/carrito', [CartController::class, 'index'])->name('cart.index');

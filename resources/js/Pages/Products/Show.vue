@@ -42,8 +42,8 @@
                             class="h-96 bg-gray-100 rounded-lg flex items-center justify-center mb-4"
                         >
                             <img
-                                v-if="product.main_image"
-                                :src="product.main_image"
+                                v-if="currentMainImage"
+                                :src="currentMainImage"
                                 :alt="product.name"
                                 class="h-full w-full object-contain"
                             />
@@ -121,32 +121,56 @@
                             </p>
                         </div>
 
-                        <!-- Sizes -->
-                        <div class="mt-8">
-                            <h3 class="text-sm font-medium text-gray-900">
-                                Tallas disponibles:
-                            </h3>
-                            <div class="grid grid-cols-3 gap-2 mt-2">
-                                <button
-                                    v-for="size in product.sizes || []"
-                                    :key="size"
-                                    class="border border-gray-300 rounded-md py-2 px-3 text-sm font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                    :class="{
-                                        'bg-indigo-100 border-indigo-500':
-                                            selectedSize === size,
-                                    }"
-                                    @click="selectedSize = size"
-                                >
-                                    {{ size }}
-                                </button>
-                            </div>
+ <!-- Sizes Section - Versión con botones -->
+        <div class="mt-8">
+            <h3 class="text-sm font-medium text-gray-900">
+                Tallas disponibles:
+            </h3>
+            <div class="grid grid-cols-3 gap-2 mt-2">
+                <button
+                    v-for="size in availableSizes"
+                    :key="size.id"
+                    class="border border-gray-300 rounded-md py-2 px-3 text-sm font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    :class="{
+                        'bg-indigo-100 border-indigo-500': selectedSize === size.id,
+                        'opacity-50 cursor-not-allowed': size.stock <= 0
+                    }"
+                    @click="selectSize(size)"
+                    :disabled="size.stock <= 0"
+                >
+                    {{ size.name }}
+                    <span v-if="size.stock > 0" class="text-xs text-gray-500 block">
+                        ({{ size.stock }} disponibles)
+                    </span>
+                    <span v-else class="text-xs text-red-500 block">
+                        (Agotado)
+                    </span>
+                </button>
+            </div>
+        </div>
+
+
+                        <!-- Quantity -->
+                        <div class="mt-4">
+                            <label
+                                class="block text-sm font-medium text-gray-700"
+                                >Cantidad:</label
+                            >
+                            <input
+                                type="number"
+                                v-model.number="quantity"
+                                min="1"
+                                :max="maxQuantity"
+                                class="w-full border border-gray-300 rounded-lg p-2"
+                                required
+                            />
                         </div>
 
                         <!-- Add to cart button -->
                         <button
                             class="mt-8 w-full bg-indigo-600 border border-transparent rounded-md py-3 px-8 flex items-center justify-center text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                            @click="addToCart"
-                            :disabled="!selectedSize"
+                            @click="submitAddToCart"
+                            :disabled="!canAddToCart"
                         >
                             Añadir a la cesta
                         </button>
@@ -223,7 +247,7 @@
 
 <script setup>
 import AppLayout from "@/Layouts/AppLayout.vue";
-import { Link } from "@inertiajs/vue3";
+import { Link, useForm } from "@inertiajs/vue3";
 import { ref, computed } from "vue";
 import { useCartStore } from "@/stores/cart";
 import { toast } from "vue3-toastify";
@@ -245,7 +269,7 @@ const props = defineProps({
             description: "",
             main_image: null,
             images: [],
-            sizes: [],
+            sizes: [], // Formato: [{ id, name, pivot: { stock } }]
             stock: 0,
             discount: 0,
             points: 0,
@@ -255,8 +279,10 @@ const props = defineProps({
 });
 
 const selectedSize = ref(null);
+const quantity = ref(1);
 const currentMainImage = ref(props.product.main_image);
 const cartStore = useCartStore();
+
 
 const formatPrice = (price) => {
     return new Intl.NumberFormat("es-ES", {
@@ -269,26 +295,98 @@ const changeMainImage = (image) => {
     currentMainImage.value = image;
 };
 
-const addToCart = () => {
-    if (!selectedSize.value) {
-        toast.error("Por favor, selecciona una talla", {
-            position: toast.POSITION.TOP_RIGHT,
-            autoClose: 3000,
-        });
-        return;
-    }
+const availableSizes = computed(() => {
+    return props.product.sizes.map(size => ({
+        id: size.id,
+        name: size.name,
+        stock: size.pivot?.stock || 0
+    }));
+});
 
-    cartStore.addItem(props.product, selectedSize.value);
+const maxQuantity = computed(() => {
+    if (!selectedSize.value || !props.product.sizes) return 0;
+    const size = availableSizes.value.find((s) => s.id === selectedSize.value);
+    return size ? size.stock : 0;
+});
 
-    toast.success("Producto añadido al carrito", {
-        position: toast.POSITION.TOP_RIGHT,
-        autoClose: 2000,
-    });
-};
+const canAddToCart = computed(() => {
+    return selectedSize.value !== null &&
+        quantity.value > 0 &&
+        quantity.value <= maxQuantity.value;
+});
+
+
 
 const estimatedDeliveryDate = computed(() => {
     const date = new Date();
     date.setDate(date.getDate() + 3);
     return date.toLocaleDateString("es-ES", { day: "numeric", month: "long" });
 });
+
+const form = useForm({
+    product_id: props.product.id,
+    size_id: null, // Use size_id
+    quantity: 1,
+});
+
+const selectSize = (size) => {
+    if (size.stock > 0) {
+        selectedSize.value = size.id;
+        form.size_id = size.id; // Set size_id
+    }
+};
+
+const submitAddToCart = async () => {
+    if (!canAddToCart.value) {
+        toast.error("Por favor, selecciona una talla y una cantidad válida", {
+            position: toast.POSITION.TOP_RIGHT,
+            autoClose: 3000,
+        });
+        return;
+    }
+
+    try {
+        await form.post(route("cart.add"), {
+            preserveScroll: true,
+            onSuccess: () => {
+                const size = availableSizes.value.find((s) => s.id === selectedSize.value);
+                cartStore.addItem(
+                    {
+                        id: props.product.id,
+                        name: props.product.name,
+                        price: props.product.price,
+                        main_image: props.product.main_image,
+                    },
+                    size?.name,
+                    quantity.value,
+                    size?.id // Pass size_id
+                );
+                toast.success("Producto añadido al carrito", {
+                    position: toast.POSITION.TOP_RIGHT,
+                    autoClose: 2000,
+                });
+                selectedSize.value = null;
+                quantity.value = 1;
+                form.size_id = null;
+            },
+            onError: (errors) => {
+                toast.error(
+                    "Error al añadir el producto al carrito: " +
+                    Object.values(errors).join(", "),
+                    {
+                        position: toast.POSITION.TOP_RIGHT,
+                        autoClose: 3000,
+                    }
+                );
+            },
+        });
+    } catch (error) {
+        console.error('Error al añadir al carrito:', error);
+        toast.error('Error de conexión al añadir al carrito', {
+            position: toast.POSITION.TOP_RIGHT,
+            autoClose: 3000,
+        });
+    }
+};
 </script>
+
