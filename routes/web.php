@@ -13,6 +13,8 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StripeWebhookController;
+use App\Models\Order;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -35,6 +37,29 @@ Route::get('/about', function () {
         'flash' => session()->only(['success', 'error']),
     ]);
 })->name('about');
+
+Route::get('/invoices/factura-{id}.pdf', function ($id) {
+    $order = Order::findOrFail($id);
+    $user = $order->user;
+
+    $pdf = Pdf::loadView('invoices.invoice-pdf', [
+        'order' => $order,
+        'user' => $user
+    ]);
+
+    return $pdf->stream('factura-'.$order->id.'.pdf');
+})->name('invoice.download');
+
+Route::get('/descargar-factura/{order}', function (Order $order) {
+    $user = $order->user;
+    
+    $pdf = Pdf::loadView('invoices.invoice-pdf', [
+        'order' => $order,
+        'user' => $user
+    ]);
+    
+    return $pdf->download('factura-' . $order->id . '.pdf');
+})->name('invoice.download');
 
 // Rutas de autenticación de usuario normal
 Route::middleware('auth')->group(function () {
