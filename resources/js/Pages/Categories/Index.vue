@@ -452,7 +452,7 @@
         <div class="text-center mb-12">
           <h2 class="text-base font-semibold text-indigo-600 tracking-wide uppercase">Explora</h2>
           <h3 class="mt-2 text-3xl font-extrabold text-gray-900 sm:text-4xl">
-            Nuestras Categorías
+            Nuestras categorías
           </h3>
           <p class="mt-3 max-w-2xl mx-auto text-xl text-gray-500 sm:mt-4">
             Descubre la moda que se adapta a tu estilo de vida
