@@ -506,6 +506,7 @@
 </div>
 
 
+
 <!-- Sección de Categorías -->
 <div id="categories" class="bg-white py-8 sm:py-16 pt-4 sm:pt-8">
   <div class="mx-auto px-2 sm:px-4 lg:px-8" style="max-width: 1440px; width: 100%;">

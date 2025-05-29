@@ -49,4 +49,4 @@ class HandleInertiaRequests extends Middleware
             'canRegister' => Route::has('register'),
         ]);
     }
-}
+} 

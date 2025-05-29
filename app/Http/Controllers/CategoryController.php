@@ -34,7 +34,7 @@ class CategoryController extends Controller
     public function show(Request $request, $slug)
     {
         $category = Category::where('slug', $slug)->firstOrFail();
-
+ 
         // Convertir parámetros de filtro a array si son strings o null
         $filters = [
             'colors' => is_array($request->colors) ? $request->colors : (is_string($request->colors) ? explode(',', $request->colors) : []),
