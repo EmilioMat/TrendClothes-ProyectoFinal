@@ -342,61 +342,56 @@
       </div>
     </nav>
 
-    <!-- Hero Section - Diseño exclusivo -->
-    <div class="relative h-screen overflow-hidden">
-      <!-- Video o imagen de fondo con overlay dinámico -->
-      <div class="absolute inset-0">
-      <img 
-        src="/images/Page-About/Hero.jpg" 
-        alt="TrendClothes Atelier"
-        class="w-full h-full object-cover"
-      />
-        <div class="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent"></div>
-        <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20"></div>
-      </div>
-      
-      <!-- Contenido del Hero -->
-      <div class="relative h-full flex items-center justify-center">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div class="animate-fade-in-up">
-            <span class="inline-block px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-white text-sm font-medium mb-6 border border-white/20">
-              ✦ EST. 2019 ✦
-            </span>
-          </div>
-          <h1 class="text-5xl md:text-7xl lg:text-8xl font-black text-white mb-8 animate-fade-in-up delay-200 leading-tight">
-            TREND<span class="gradient-text-hero">CLOTHES</span>
-          </h1>
-          <p class="text-xl md:text-2xl text-gray-200 max-w-3xl mx-auto mb-12 animate-fade-in-up delay-400 leading-relaxed">
-            Donde cada hilo cuenta una historia, cada diseño desafía lo convencional y cada prenda redefine tu identidad.
-          </p>
-          <div class="flex flex-col sm:flex-row gap-6 justify-center animate-fade-in-up delay-600">
-            <a 
-              href="#our-journey"
-              class="px-10 py-4 bg-white text-gray-900 font-bold rounded-full hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 hover:shadow-2xl"
-            >
-              Descubre Nuestra Historia
-            </a>
-            <a 
-              href="#manifesto"
-              class="px-10 py-4 bg-transparent border-2 border-white text-white font-bold rounded-full hover:bg-white hover:text-gray-900 transition-all duration-300 transform hover:scale-105"
-            >
-              Nuestro Manifiesto
-            </a>
-            
-          </div>
-        </div>
-      </div>
-      
-      <!-- Scroll indicator -->
-      <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-        <div class="w-6 h-10 border-2 border-white rounded-full p-1">
-          <div class="w-1 h-3 bg-white rounded-full mx-auto animate-pulse"></div>
-        </div>
+
+
+    <!-- Contenido principal -->
+    <main>
+      <!-- Hero Section - Diseño exclusivo -->
+<div class="relative h-screen overflow-hidden">
+  <!-- Video o imagen de fondo con overlay dinámico -->
+  <div class="absolute inset-0">
+    <img 
+      src="/images/Page-About/Hero.jpg" 
+      alt="TrendClothes Atelier"
+      class="w-full h-full object-cover"
+    />
+    <div class="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent"></div>
+    <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20"></div>
+  </div>
+  
+  <!-- Contenido del Hero -->
+  <div class="relative h-full flex items-center justify-center">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <h1 class="text-4xl md:text-6xl font-bold text-white mb-6 animate-fade-in">
+        TRENDCLOTHES
+      </h1>
+      <p class="text-xl md:text-2xl text-white/90 max-w-2xl mx-auto mb-8 animate-fade-in delay-100">
+        Donde cada hilo cuenta una historia, cada diseño desafía lo convencional y cada prenda redefine tu identidad.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-6 justify-center animate-fade-in-up delay-600">
+        <a 
+          href="#our-journey"
+          class="px-10 py-4 bg-white text-gray-900 font-bold rounded-full hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 hover:shadow-2xl"
+        >
+          Descubre Nuestra Historia
+        </a>
+        <a 
+          href="#manifesto"
+          class="px-10 py-4 bg-transparent border-2 border-white text-white font-bold rounded-full hover:bg-white hover:text-gray-900 transition-all duration-300 transform hover:scale-105"
+        >
+          Nuestro Manifiesto
+        </a>
       </div>
     </div>
-
-    <!-- Main Content -->
-    <main>
+  </div>
+  
+  <!-- Scroll indicator -->
+  <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+    <div class="w-6 h-10 border-2 border-white rounded-full p-1">
+      <div class="w-1 h-3 bg-white rounded-full mx-auto animate-pulse"></div>
+    </div>
+  </div>
+</div>
       <!-- Manifesto Section -->
       <section id="manifesto" class="py-24 bg-black text-white relative overflow-hidden">
         <div class="absolute inset-0 opacity-10">
@@ -532,7 +527,7 @@
               <p class="text-gray-600 mb-4">
                 Lanzamos colecciones eco con algodón orgánico y poliéster reciclado. Colaboramos con artistas locales para impulsar el talento emergente.
               </p>
-              <div class="text-sm text-green-600 font-semibold">+12.000 prendas sostenibles vendidas</div>
+              <div class="text-sm text-green-800 font-semibold">+12.000 prendas sostenibles vendidas</div>
             </div>
           </div>
           <div class="absolute left-1/2 transform -translate-x-1/2 w-6 h-6 bg-green-500 rounded-full border-4 border-white shadow-lg"></div>
@@ -575,7 +570,7 @@
        <!-- Values Section -->
       <section class="py-24 bg-gray-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div class="text-center mb-20">
+          <div class="text-center mb-20" id="compromiso" >
             <span class="text-sm font-bold tracking-widest text-indigo-600 uppercase animate-fade-in-up">Nuestros Valores</span>
             <h2 class="text-4xl md:text-5xl font-black text-gray-900 mt-4 mb-8 animate-fade-in-up delay-200">
               Lo que nos <span class="gradient-text">Impulsa</span>
@@ -666,60 +661,67 @@
 
 
       <!-- Call to Action -->
-      <section class="py-24 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 relative overflow-hidden">
-        <div class="absolute inset-0 bg-black/20"></div>
-        <div class="absolute inset-0">
-          <div class="absolute top-10 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
-          <div class="absolute bottom-10 right-10 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        </div>
-        
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative">
-          <h2 class="text-4xl md:text-6xl font-black text-white mb-8 animate-fade-in-up">
-            ¿Listo para ser parte de la <span class="text-yellow-300">Revolución</span>?
-          </h2>
-          <p class="text-xl md:text-2xl text-gray-200 max-w-4xl mx-auto mb-12 animate-fade-in-up delay-200">
-            Únete a miles de personas que ya han descubierto que la moda puede ser mucho más que ropa. Es identidad, es arte, es revolución.
-          </p>
-          
-          <div class="flex flex-col sm:flex-row gap-6 justify-center animate-fade-in-up delay-400">
-            <Link 
-              :href="route('categories.index')"
-              class="px-10 py-4 bg-white text-gray-900 font-bold rounded-full hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 hover:shadow-2xl"
-            >
-              Explorar Colecciones
-            </Link>
-            <Link 
-              :href="route('home')"
-              class="px-10 py-4 bg-transparent border-2 border-white text-white font-bold rounded-full hover:bg-white hover:text-gray-900 transition-all duration-300 transform hover:scale-105"
-            >
-              Volver al Inicio
-            </Link>
-          </div>
-          
-          <!-- Social Proof -->
-          <div class="mt-16 flex flex-wrap justify-center items-center gap-8 text-white/80 animate-fade-in-up delay-600">
-            <div class="text-center">
-              <div class="text-3xl font-black">15K+</div>
-              <div class="text-sm uppercase tracking-wide">Clientes Felices</div>
-            </div>
-            <div class="hidden sm:block w-px h-12 bg-white/30"></div>
-            <div class="text-center">
-              <div class="text-3xl font-black">50+</div>
-              <div class="text-sm uppercase tracking-wide">Diseños Únicos</div>
-            </div>
-            <div class="hidden sm:block w-px h-12 bg-white/30"></div>
-            <div class="text-center">
-              <div class="text-3xl font-black">5+</div>
-              <div class="text-sm uppercase tracking-wide">Años Innovando</div>
-            </div>
-            <div class="hidden sm:block w-px h-12 bg-white/30"></div>
-            <div class="text-center">
-              <div class="text-3xl font-black">100%</div>
-              <div class="text-sm uppercase tracking-wide">Pasión</div>
-            </div>
-          </div>
-        </div>
-      </section>
+<section class="py-24 relative overflow-hidden">
+  <div class="absolute inset-0">
+    <img 
+      src="/images/Page-About/Revolucion.webp" 
+      alt="Comunidad Background"
+      class="w-full h-full object-cover"
+    />
+    <div class="absolute inset-0 bg-black/40"></div>
+  </div>
+  <div class="absolute inset-0">
+    <div class="absolute top-10 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
+    <div class="absolute bottom-10 right-10 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-pulse delay-1000"></div>
+  </div>
+  
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative">
+    <h2 class="text-4xl md:text-6xl font-black text-white mb-8 animate-fade-in-up">
+      ¿Listo para ser parte de la <span class="text-yellow-300">Revolución</span>?
+    </h2>
+    <p class="text-xl md:text-2xl text-gray-200 max-w-4xl mx-auto mb-12 animate-fade-in-up delay-200">
+      Únete a miles de personas que ya han descubierto que la moda puede ser mucho más que ropa. Es identidad, es arte, es revolución.
+    </p>
+    
+    <div class="flex flex-col sm:flex-row gap-6 justify-center animate-fade-in-up delay-400">
+      <Link 
+        :href="route('categories.index')"
+        class="px-10 py-4 bg-white text-gray-900 font-bold rounded-full hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 hover:shadow-2xl"
+      >
+        Explorar Colecciones
+      </Link>
+      <Link 
+        :href="route('home')"
+        class="px-10 py-4 bg-transparent border-2 border-white text-white font-bold rounded-full hover:bg-white hover:text-gray-900 transition-all duration-300 transform hover:scale-105"
+      >
+        Volver al Inicio
+      </Link>
+    </div>
+    
+    <!-- Social Proof -->
+    <div class="mt-16 flex flex-wrap justify-center items-center gap-8 text-white/80 animate-fade-in-up delay-600">
+      <div class="text-center">
+        <div class="text-3xl font-black">15K+</div>
+        <div class="text-sm uppercase tracking-wide">Clientes Felices</div>
+      </div>
+      <div class="hidden sm:block w-px h-12 bg-white/30"></div>
+      <div class="text-center">
+        <div class="text-3xl font-black">50+</div>
+        <div class="text-sm uppercase tracking-wide">Diseños Únicos</div>
+      </div>
+      <div class="hidden sm:block w-px h-12 bg-white/30"></div>
+      <div class="text-center">
+        <div class="text-3xl font-black">5+</div>
+        <div class="text-sm uppercase tracking-wide">Años Innovando</div>
+      </div>
+      <div class="hidden sm:block w-px h-12 bg-white/30"></div>
+      <div class="text-center">
+        <div class="text-3xl font-black">100%</div>
+        <div class="text-sm uppercase tracking-wide">Pasión</div>
+      </div>
+    </div>
+  </div>
+</section>
 
     </main>
 
