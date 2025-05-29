@@ -451,10 +451,11 @@
               class="relative w-full h-[700px] bg-cover bg-center rounded-lg shadow-md overflow-hidden hover:shadow-lg group"
               :style="{ backgroundImage: `url(${category.image || 'https://via.placeholder.com/500x700'})` }"
             >
-              <Link
-                :href="route('categories.index') + '?type=' + category.name.toLowerCase()"
-                class="absolute inset-0 flex flex-col items-center justify-end bg-black bg-opacity-0 group-hover:bg-opacity-30 transition duration-300 pb-12"
-              >
+<Link
+  :href="`/categories/${category.name.toLowerCase()}`"
+  class="absolute inset-0 flex flex-col items-center justify-end bg-black bg-opacity-0 group-hover:bg-opacity-30 transition duration-300 pb-12"
+>
+
                 <!-- Category Title -->
                 <span class="spot_cta_title text-white text-center mb-4" style="
                   font-size: 50px;
