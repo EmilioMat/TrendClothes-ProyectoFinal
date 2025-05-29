@@ -172,7 +172,6 @@ const addFilterParamsToPaginationLink = (url) => {
     return urlObj.toString();
 };
 </script>
-
 <template>
     <AppLayout>
         <div class="bg-gray-50 py-12">
@@ -198,7 +197,7 @@ const addFilterParamsToPaginationLink = (url) => {
                             class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 sticky top-6 md:block"
                         >
                             <div class="flex justify-between items-center mb-6 border-b border-gray-200 pb-4">
-                                <h2 class="text-xl font-semibold text-gray-900">Filtros</h2>
+                                <span class="text-xl font-semibold text-gray-900">Filtros</span>
                                 <button 
                                     v-if="hasActiveFilters"
                                     @click="resetFilters"
@@ -221,20 +220,24 @@ const addFilterParamsToPaginationLink = (url) => {
                                 </button>
                                 <div v-show="filterSections.price" class="space-y-4 transition-all duration-300">
                                     <div class="relative">
+                                        <label for="price-min" class="text-sm text-gray-700">Precio mínimo</label>
                                         <input 
                                             type="range" 
+                                            id="price-min"
                                             v-model.number="selectedFilters.price_min"
                                             :min="filterValues.priceRange.min"
                                             :max="filterValues.priceRange.max"
-                                            class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                                            class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-1"
                                             style="background: linear-gradient(to right, #4b5563 0%, #4b5563 50%, #e5e7eb 50%, #e5e7eb 100%)"
                                         />
+                                        <label for="price-max" class="text-sm text-gray-700 mt-4">Precio máximo</label>
                                         <input 
                                             type="range" 
+                                            id="price-max"
                                             v-model.number="selectedFilters.price_max"
                                             :min="filterValues.priceRange.min"
                                             :max="filterValues.priceRange.max"
-                                            class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                                            class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-1"
                                             style="background: linear-gradient(to right, #e5e7eb 0%, #e5e7eb 50%, #4b5563 50%, #4b5563 100%)"
                                         />
                                         <div class="flex justify-between text-sm text-gray-600 mt-2">
@@ -388,10 +391,12 @@ const addFilterParamsToPaginationLink = (url) => {
                             <!-- Ordenar movido fuera de la caja negra, a la izquierda -->
                             <div class="mb-4">
                                 <div class="relative">
+                                    <label for="sort-select" class="text-sm text-gray-700">Ordenar por</label>
                                     <select 
+                                        id="sort-select"
                                         v-model="selectedFilters.sort"
                                         @change="applyFilters"
-                                        class="appearance-none bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded-lg leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-medium"
+                                        class="appearance-none bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded-lg leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-medium mt-1"
                                     >
                                         <option value="newest">Más recientes</option>
                                         <option value="price_asc">Precio: menor a mayor</option>
@@ -425,24 +430,19 @@ const addFilterParamsToPaginationLink = (url) => {
                                     <div v-else class="text-gray-500">Sin imagen</div>
                                     <div 
                                         v-if="hoveredProduct === index" 
-                                        class="absolute inset-0 flex items-end justify-center pb-4 space-x-4 opacity-0 hover:opacity-100 transition-opacity duration-300"
+                                        class="absolute inset-0 flex items-end justify-center pb-4 opacity-0 hover:opacity-100 transition-opacity duration-300"
                                     >
                                         <Link :href="route('products.show', { product: product.slug || product.id })" class="hover-button">
                                             <el-icon :size="48" class="rounded-full p-4 bg-white hover:bg-gray-200 transition-colors">
                                                 <View />
                                             </el-icon>
                                         </Link>
-                                        <div class="cursor-pointer hover-button" @click.stop="addToCart(product.id)">
-                                            <el-icon :size="48" class="rounded-full p-4 bg-white hover:bg-gray-200 transition-colors">
-                                                <ShoppingCart />
-                                            </el-icon>
-                                        </div>
                                     </div>
                                 </div>
                                 <div class="pt-4 pb-2 px-2 flex flex-col justify-between">
-                                    <h3 class="text-lg font-semibold text-gray-900 line-clamp-1">
+                                    <span class="text-lg font-semibold text-gray-900 line-clamp-1">
                                         {{ product.name || 'Producto sin nombre' }}
-                                    </h3>
+                                    </span>
                                     <div class="flex items-center justify-between mt-2">
                                         <span class="text-xl font-bold text-indigo-600">
                                             {{ formatPrice(product.price || 0) }}
@@ -491,7 +491,6 @@ const addFilterParamsToPaginationLink = (url) => {
         </div>
     </AppLayout>
 </template>
-
 <style scoped>
 .line-clamp-1 {
     display: -webkit-box;

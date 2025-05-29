@@ -13,79 +13,334 @@
     </div>
 
     <!-- Navegación -->
-    <nav class="bg-white shadow-lg">
+    <nav :class="{ 'scrolled': isScrolled }" class="fixed top-0 left-0 w-full z-10 transition-all duration-300 bg-white shadow-lg">
       <div class="mx-auto px-4 sm:px-6 lg:px-8" style="max-width: 1440px; width: 100%;">
-        <div class="flex justify-between h-20">
+        <div class="flex justify-between h-20 items-center" :class="isScrolled ? 'h-16' : 'h-20'">
+          <!-- Logo -->
           <div class="flex items-center">
-            <Link :href="route('home')" class="text-2xl font-bold text-indigo-600">TrendClothes</Link>
+            <Link :href="route('home')" class="text-2xl font-bold" :class="isScrolled ? 'text-indigo-600' : 'text-indigo-600'">TrendClothes</Link>
           </div>
-          
-          <!-- Menú central -->
-          <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
-            <Link 
-              :href="route('home')" 
+
+          <!-- Menú de Escritorio -->
+          <div class="hidden md:flex md:items-center md:ml-6 md:space-x-8">
+            <Link
+              :href="route('home')"
               class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-              :class="route().current('home') ? 'border-indigo-500 text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'"
+              :class="[
+                route().current('home') ? 'border-indigo-500 text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
+              ]"
+              aria-label="Ir a Inicio"
             >
               Inicio
             </Link>
-            <Link 
-              :href="route('categories.index')" 
+            <Link
+              :href="route('categories.index')"
               class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-              :class="route().current('categories.*') ? 'border-indigo-500 text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'"
+              :class="[
+                route().current('categories.*') ? 'border-indigo-500 text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
+              ]"
+              aria-label="Ir a Categorías"
             >
               Categorías
             </Link>
+            <Link
+              :href="route('about')"
+              class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+              :class="[
+                route().current('about') ? 'border-indigo-500 text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
+              ]"
+              aria-label="Ir a Sobre Nosotros"
+            >
+              Sobre Nosotros
+            </Link>
           </div>
-          
-          <!-- Menú derecho -->
-          <div class="hidden sm:ml-6 sm:flex sm:items-center space-x-4">
-            <!-- Icono del carrito -->
-            <div class="relative">
-              <Link :href="route('cart.index')" class="text-gray-700 hover:text-indigo-600">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+
+          <!-- Menú Derecho (Carrito y Usuario) -->
+          <div class="flex items-center space-x-4">
+            <!-- Carrito con Vista Previa al Pasar el Ratón -->
+            <div class="relative group">
+              <Link :href="route('cart.index')" class="flex items-center text-gray-700 hover:text-indigo-600">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+                  />
                 </svg>
-                <span v-if="cartCount > 0" class="absolute -top-2 -right-2 bg-indigo-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                <span
+                  v-if="cartCount > 0"
+                  class="absolute -top-2 -right-2 bg-indigo-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center"
+                >
                   {{ cartCount }}
                 </span>
               </Link>
+              <!-- Vista Previa del Carrito -->
+              <div
+                class="fixed md:absolute left-0 md:left-auto right-0 md:right-auto mt-2 w-full md:w-80 bg-white rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none group-hover:pointer-events-auto z-10"
+                style="max-width: 95vw; margin: 0 auto; transform: translateX(-50%); left: 50%;"
+              >
+                <div class="p-4">
+                  <span class="text-sm font-semibold text-gray-900">Carrito</span>
+                  <div v-if="cartItems.length > 0" class="mt-2 space-y-2">
+                    <div
+                      v-for="item in cartItems"
+                      :key="item.id"
+                      class="flex items-center space-x-4"
+                    >
+                      <img
+                        v-if="item.product.main_image"
+                        :src="item.product.main_image"
+                        :alt="item.product.name"
+                        class="h-12 w-12 object-cover rounded"
+                      />
+                      <div>
+                        <p class="text-sm text-gray-700">{{ item.product.name }}</p>
+                        <p class="text-xs text-gray-600">Cantidad: {{ item.quantity }}</p>
+                        <p class="text-sm font-semibold text-indigo-600">
+                          {{ formatPrice(item.product.price * item.quantity) }}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <p v-else class="text-sm text-gray-600">Tu carrito está vacío</p>
+                  <Link
+                    :href="route('cart.index')"
+                    class="mt-4 block text-center text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md py-2"
+                  >
+                    Ver Carrito
+                  </Link>
+                </div>
+              </div>
             </div>
-            
-            <!-- Icono de usuario -->
+
+            <!-- Menú de Usuario -->
             <template v-if="$page.props.auth.user">
-              <Dropdown align="right" width="48">
-                <template #trigger>
-                  <button class="flex items-center text-sm font-medium text-gray-700 hover:text-gray-900 focus:outline-none">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                  </button>
-                </template>
-                <template #content>
-                  <DropdownLink :href="route('profile.edit')">Perfil</DropdownLink>
-                  <DropdownLink v-if="$page.props.auth.user.is_admin" :href="route('admin.dashboard')">
-                    Panel de Administración
-                  </DropdownLink>
-                  <DropdownLink :href="route('logout')" method="post" as="button">
-                    Cerrar Sesión
-                  </DropdownLink>
-                </template>
-              </Dropdown>
+              <div class="hidden md:block">
+                <Dropdown align="right" width="48">
+                  <template #trigger>
+                    <button
+                      class="flex items-center text-sm font-medium focus:outline-none text-gray-700 hover:text-indigo-600"
+                      aria-label="Menú de usuario"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-6 w-6"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                        />
+                      </svg>
+                    </button>
+                  </template>
+                  <template #content>
+                    <DropdownLink :href="route('profile.edit')">Perfil</DropdownLink>
+                    <DropdownLink v-if="$page.props.auth.user.is_admin" :href="route('admin.dashboard')">
+                      Panel de Administración
+                    </DropdownLink>
+                    <DropdownLink :href="route('logout')" method="post" as="button">
+                      Cerrar Sesión
+                    </DropdownLink>
+                  </template>
+                </Dropdown>
+              </div>
             </template>
             <template v-else>
-              <Link :href="route('login')" class="text-sm font-medium text-gray-700 hover:text-gray-900 mr-4">Iniciar Sesión</Link>
-              <Link v-if="$page.props.canRegister" :href="route('register')" class="text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-md">
+              <Link
+                :href="route('login')"
+                class="text-sm font-medium mr-4 hidden md:block text-gray-700 hover:text-indigo-600"
+                aria-label="Iniciar Sesión"
+              >
+                Iniciar Sesión
+              </Link>
+              <Link
+                v-if="$page.props.canRegister"
+                :href="route('register')"
+                class="text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-md hidden md:block"
+                aria-label="Registrarse"
+              >
                 Registrarse
               </Link>
             </template>
+
+            <!-- Botón de Menú Móvil -->
+            <div class="md:hidden">
+              <button
+                @click="mobileMenuOpen = !mobileMenuOpen"
+                class="focus:outline-none text-gray-600 hover:text-gray-700"
+                aria-label="Abrir menú móvil"
+              >
+                <svg
+                  v-if="!mobileMenuOpen"
+                  class="h-6 w-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
+                </svg>
+                <svg
+                  v-else
+                  class="h-6 w-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contenido del Menú Móvil -->
+        <div v-if="mobileMenuOpen" class="md:hidden fixed inset-0 z-50">
+          <div 
+            class="absolute inset-0 overflow-y-auto bg-gray-900 bg-opacity-80 backdrop-blur-md"
+            style="border: 0; bottom: 0; height: 100%; left: 0; overflow-y: scroll; padding: 0; position: absolute; right: 20px; width: calc(100% - 20px);"
+          >
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+              <div class="flex justify-end p-4">
+                <button
+                  @click="mobileMenuOpen = false"
+                  class="text-white hover:text-gray-300 focus:outline-none"
+                  aria-label="Cerrar menú móvil"
+                >
+                  <svg
+                    class="h-8 w-8"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+              
+              <div class="flex flex-col items-center mt-8">
+                <Link
+                  :href="route('home')"
+                  class="block px-3 py-4 text-xl font-medium text-white border-b border-gray-700 w-full text-center"
+                  :class="route().current('home') ? 'text-indigo-300' : 'hover:text-gray-300'"
+                  @click="mobileMenuOpen = false"
+                  aria-label="Ir a Inicio"
+                >
+                  Inicio
+                </Link>
+                <Link
+                  :href="route('categories.index')"
+                  class="block px-3 py-4 text-xl font-medium text-white border-b border-gray-700 w-full text-center"
+                  :class="route().current('categories.*') ? 'text-indigo-300' : 'hover:text-gray-300'"
+                  @click="mobileMenuOpen = false"
+                  aria-label="Ir a Categorías"
+                >
+                  Categorías
+                </Link>
+                <Link
+                  :href="route('about')"
+                  class="block px-3 py-4 text-xl font-medium text-white border-b border-gray-700 w-full text-center"
+                  :class="route().current('about') ? 'text-indigo-300' : 'hover:text-gray-300'"
+                  @click="mobileMenuOpen = false"
+                  aria-label="Ir a Sobre Nosotros"
+                >
+                  Sobre Nosotros
+                </Link>
+                
+                <template v-if="$page.props.auth.user">
+                  <div class="w-full">
+                    <button
+                      @click="subMenuOpen = !subMenuOpen"
+                      class="block px-3 py-4 text-xl font-medium text-white border-b border-gray-700 w-full text-center hover:text-gray-300"
+                      aria-label="Abrir menú de usuario"
+                    >
+                      MI TRENDCLOTHES
+                    </button>
+                    <div v-if="subMenuOpen" class="pl-6 space-y-2">
+                      <Link
+                        :href="route('profile.edit')"
+                        class="block px-3 py-2 text-lg font-medium text-white border-b border-gray-700 w-full text-center hover:text-gray-300"
+                        @click="mobileMenuOpen = false; subMenuOpen = false"
+                        aria-label="Ir a Mi Perfil"
+                      >
+                        Mi Perfil
+                      </Link>
+                      <Link
+                        v-if="$page.props.auth.user.is_admin"
+                        :href="route('admin.dashboard')"
+                        class="block px-3 py-2 text-lg font-medium text-white border-b border-gray-700 w-full text-center hover:text-gray-300"
+                        @click="mobileMenuOpen = false; subMenuOpen = false"
+                        aria-label="Ir a Panel de Administración"
+                      >
+                        Panel de Administración
+                      </Link>
+                      <Link
+                        :href="route('logout')"
+                        method="post"
+                        as="button"
+                        class="block px-3 py-2 text-lg font-medium text-white border-b border-gray-700 w-full text-center hover:text-gray-300"
+                        @click="mobileMenuOpen = false; subMenuOpen = false"
+                        aria-label="Cerrar Sesión"
+                      >
+                        Cerrar Sesión
+                      </Link>
+                    </div>
+                  </div>
+                </template>
+                <template v-else>
+                  <Link
+                    :href="route('login')"
+                    class="block px-3 py-4 text-xl font-medium text-white border-b border-gray-700 w-full text-center hover:text-gray-300"
+                    @click="mobileMenuOpen = false"
+                    aria-label="Iniciar Sesión"
+                  >
+                    Iniciar Sesión
+                  </Link>
+                  <Link
+                    v-if="$page.props.canRegister"
+                    :href="route('register')"
+                    class="block px-3 py-4 text-xl font-medium text-white border-b border-gray-700 w-full text-center hover:text-gray-300"
+                    @click="mobileMenuOpen = false"
+                    aria-label="Registrarse"
+                  >
+                    Registrarse
+                  </Link>
+                </template>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </nav>
 
     <!-- Contenido principal -->
-    <main class="mx-auto py-8 px-4 sm:px-6 lg:px-8" style="max-width: 1440px; width: 100%;">
+    <main class="mx-auto py-8 px-4 sm:px-6 lg:px-8" style="max-width: 1440px; width: 100%;" :class="isScrolled ? 'mt-16' : 'mt-20'">
       <slot />
     </main>
 
@@ -94,11 +349,11 @@
       <div class="mx-auto px-4 sm:px-6 lg:px-8" style="max-width: 1440px; width: 100%;">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <h3 class="text-lg font-semibold mb-4">TrendClothes</h3>
+            <span class="text-lg font-semibold mb-4">TrendClothes</span>
             <p class="text-gray-400">La mejor selección de moda para todos los estilos.</p>
           </div>
           <div>
-            <h3 class="text-lg font-semibold mb-4">Categorías</h3>
+            <span class="text-lg font-semibold mb-4">Categorías</span>
             <ul class="space-y-2">
               <li><Link :href="route('categories.index')" class="text-gray-400 hover:text-white">Todas las categorías</Link></li>
               <li><a href="#" class="text-gray-400 hover:text-white">Hombre</a></li>
@@ -107,7 +362,7 @@
             </ul>
           </div>
           <div>
-            <h3 class="text-lg font-semibold mb-4">Ayuda</h3>
+            <span class="text-lg font-semibold mb-4">Ayuda</span>
             <ul class="space-y-2">
               <li><a href="#" class="text-gray-400 hover:text-white">Contacto</a></li>
               <li><a href="#" class="text-gray-400 hover:text-white">Envíos</a></li>
@@ -115,7 +370,7 @@
             </ul>
           </div>
           <div>
-            <h3 class="text-lg font-semibold mb-4">Legal</h3>
+            <span class="text-lg font-semibold mb-4">Legal</span>
             <ul class="space-y-2">
               <li><a href="#" class="text-gray-400 hover:text-white">Términos y condiciones</a></li>
               <li><a href="#" class="text-gray-400 hover:text-white">Política de privacidad</a></li>
@@ -135,13 +390,37 @@ import { Link } from '@inertiajs/vue3';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import { useCartStore } from '@/stores/cart';
-import { computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 
 const cartStore = useCartStore();
 const cartCount = computed(() => cartStore.count);
+const cartItems = computed(() => cartStore.items);
+const isScrolled = ref(false);
+const mobileMenuOpen = ref(false);
+const subMenuOpen = ref(false);
 
 // Cargar carrito al montar el componente
 onMounted(() => {
   cartStore.loadFromLocalStorage();
+
+  // Manejar el cambio de estilo al hacer scroll
+  const handleScroll = () => {
+    isScrolled.value = window.scrollY > 50;
+  };
+
+  window.addEventListener('scroll', handleScroll);
+  
+  // Limpieza al desmontar el componente
+  onUnmounted(() => {
+    window.removeEventListener('scroll', handleScroll);
+  });
 });
+
+// Formatear precio
+const formatPrice = (price) => {
+  return new Intl.NumberFormat('es-CL', {
+    style: 'currency',
+    currency: 'CLP',
+  }).format(price);
+};
 </script>
