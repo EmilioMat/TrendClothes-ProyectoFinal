@@ -7,7 +7,6 @@ use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -19,7 +18,7 @@ class AuthenticatedSessionController extends Controller
     public function create(): Response
     {
         return Inertia::render('Auth/Login', [
-            'canResetPassword' => Route::has('password.request'),
+            'canResetPassword' => \Illuminate\Support\Facades\Route::has('password.request'),
             'status' => session('status'),
         ]);
     }
@@ -33,10 +32,6 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        // Reemplaza esta línea:
-        // return redirect()->intended(route('dashboard', absolute: false));
-        
-        // Por esta:
         return redirect()->route('home')->with('success', '¡Bienvenido de nuevo, ' . Auth::user()->name . '!');
     }
 
@@ -53,10 +48,4 @@ class AuthenticatedSessionController extends Controller
 
         return redirect('/');
     }
-
-    // Puedes eliminar este método ya que no se está usando
-    // protected function authenticated(Request $request, $user)
-    // {
-    //     return redirect()->route('home')->with('success', '¡Bienvenido de nuevo, ' . $user->name . '!');
-    // }
 }
