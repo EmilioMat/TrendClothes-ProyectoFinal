@@ -1127,11 +1127,9 @@
 
         <!-- Pie de Página -->
         <footer class="bg-gray-800 text-white py-12">
-            <div
-                class="mx-auto px-4 sm:px-6 lg:px-8"
-                style="max-width: 1440px; width: 100%"
-            >
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <!-- Contenido del Footer -->
+            <div class="mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
                         <span class="text-lg font-semibold mb-4 inline-block"
                             >TrendClothes</span
@@ -1140,41 +1138,33 @@
                             La mejor selección de moda para todos los estilos.
                         </p>
                     </div>
-                    <div>
+                    <div class="ml-8">
                         <span class="text-lg font-semibold mb-4 inline-block"
-                            >Categorías</span
+                            >Mapa del Sitio</span
                         >
                         <ul class="space-y-2">
                             <li>
                                 <Link
-                                    :href="route('categories.index')"
+                                    :href="'/'"
                                     class="text-gray-400 hover:text-white"
-                                    aria-label="Todas las categorías"
-                                    >Todas las categorías</Link
+                                    aria-label="Ir a la página de Inicio"
+                                    >Inicio</Link
                                 >
                             </li>
                             <li>
-                                <a
-                                    href="#"
+                                <Link
+                                    :href="'/categories'"
                                     class="text-gray-400 hover:text-white"
-                                    aria-label="Categoría Hombre"
-                                    >Hombre</a
+                                    aria-label="Ir a la página de Categorías"
+                                    >Categorías</Link
                                 >
                             </li>
                             <li>
-                                <a
-                                    href="#"
+                                <Link
+                                    :href="'/about'"
                                     class="text-gray-400 hover:text-white"
-                                    aria-label="Categoría Mujer"
-                                    >Mujer</a
-                                >
-                            </li>
-                            <li>
-                                <a
-                                    href="#"
-                                    class="text-gray-400 hover:text-white"
-                                    aria-label="Categoría Unisex"
-                                    >Unisex</a
+                                    aria-label="Ir a la página de Nosotros"
+                                    >Nosotros</Link
                                 >
                             </li>
                         </ul>
@@ -1184,28 +1174,40 @@
                             >Ayuda</span
                         >
                         <ul class="space-y-2">
-                            <li>
+                            <li class="relative group">
                                 <a
                                     href="#"
                                     class="text-gray-400 hover:text-white"
-                                    aria-label="Contacto"
+                                    aria-label="Página de Contacto (en construcción)"
                                     >Contacto</a
                                 >
-                            </li>
-                            <li>
-                                <a
-                                    href="#"
-                                    class="text-gray-400 hover:text-white"
-                                    aria-label="Envíos"
-                                    >Envíos</a
+                                <span
+                                    class="absolute left-0 mt-1 w-max px-2 py-1 text-xs text-white bg-gray-600 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                                    >Página en construcción</span
                                 >
                             </li>
-                            <li>
+                            <li class="relative group">
                                 <a
                                     href="#"
                                     class="text-gray-400 hover:text-white"
-                                    aria-label="Devoluciones"
+                                    aria-label="Página de Envíos (en construcción)"
+                                    >Envíos</a
+                                >
+                                <span
+                                    class="absolute left-0 mt-1 w-max px-2 py-1 text-xs text-white bg-gray-600 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                                    >Página en construcción</span
+                                >
+                            </li>
+                            <li class="relative group">
+                                <a
+                                    href="#"
+                                    class="text-gray-400 hover:text-white"
+                                    aria-label="Página de Devoluciones (en construcción)"
                                     >Devoluciones</a
+                                >
+                                <span
+                                    class="absolute left-0 mt-1 w-max px-2 py-1 text-xs text-white bg-gray-600 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                                    >Página en construcción</span
                                 >
                             </li>
                         </ul>
@@ -1215,20 +1217,28 @@
                             >Legal</span
                         >
                         <ul class="space-y-2">
-                            <li>
+                            <li class="relative group">
                                 <a
                                     href="#"
                                     class="text-gray-400 hover:text-white"
-                                    aria-label="Términos y condiciones"
+                                    aria-label="Página de Términos y Condiciones (en construcción)"
                                     >Términos y condiciones</a
                                 >
+                                <span
+                                    class="absolute left-0 mt-1 w-max px-2 py-1 text-xs text-white bg-gray-600 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                                    >Página en construcción</span
+                                >
                             </li>
-                            <li>
+                            <li class="relative group">
                                 <a
                                     href="#"
                                     class="text-gray-400 hover:text-white"
-                                    aria-label="Política de privacidad"
+                                    aria-label="Página de Política de Privacidad (en construcción)"
                                     >Política de privacidad</a
+                                >
+                                <span
+                                    class="absolute left-0 mt-1 w-max px-2 py-1 text-xs text-white bg-gray-600 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                                    >Página en construcción</span
                                 >
                             </li>
                         </ul>
