@@ -121,43 +121,56 @@
                             </p>
                         </div>
 
- <!-- Sizes Section - Versión con botones -->
-        <div class="mt-8">
-            <h3 class="text-sm font-medium text-gray-900">
-                Tallas disponibles:
-            </h3>
-            <div class="grid grid-cols-3 gap-2 mt-2">
-                <button
-                    v-for="size in availableSizes"
-                    :key="size.id"
-                    class="border border-gray-300 rounded-md py-2 px-3 text-sm font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    :class="{
-                        'bg-indigo-100 border-indigo-500': selectedSize === size.id,
-                        'opacity-50 cursor-not-allowed': size.stock <= 0
-                    }"
-                    @click="selectSize(size)"
-                    :disabled="size.stock <= 0"
-                >
-                    {{ size.name }}
-                    <span v-if="size.stock > 0" class="text-xs text-gray-500 block">
-                        ({{ size.stock }} disponibles)
-                    </span>
-                    <span v-else class="text-xs text-red-500 block">
-                        (Agotado)
-                    </span>
-                </button>
-            </div>
-        </div>
-
+                        <!-- Sizes Section - Versión con botones -->
+                        <div class="mt-8">
+                            <h2 class="text-sm font-medium text-gray-900">
+                                Tallas disponibles:
+                            </h2>
+                            <div class="grid grid-cols-3 gap-2 mt-2">
+                                <button
+                                    v-for="size in availableSizes"
+                                    :key="size.id"
+                                    class="border border-gray-300 rounded-md py-2 px-3 text-sm font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    :class="{
+                                        'bg-indigo-100 border-indigo-500':
+                                            selectedSize === size.id,
+                                        'opacity-50 cursor-not-allowed':
+                                            size.stock <= 0,
+                                    }"
+                                    @click="selectSize(size)"
+                                    :disabled="size.stock <= 0"
+                                    :aria-label="`Seleccionar talla ${
+                                        size.name
+                                    }${size.stock <= 0 ? ' (Agotado)' : ''}`"
+                                >
+                                    {{ size.name }}
+                                    <span
+                                        v-if="size.stock > 0"
+                                        class="text-xs text-gray-500 block"
+                                    >
+                                        ({{ size.stock }} disponibles)
+                                    </span>
+                                    <span
+                                        v-else
+                                        class="text-xs text-red-500 block"
+                                    >
+                                        (Agotado)
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
 
                         <!-- Quantity -->
                         <div class="mt-4">
                             <label
+                                for="quantity-input"
                                 class="block text-sm font-medium text-gray-700"
-                                >Cantidad:</label
                             >
+                                Cantidad:
+                            </label>
                             <input
                                 type="number"
+                                id="quantity-input"
                                 v-model.number="quantity"
                                 min="1"
                                 :max="maxQuantity"
@@ -171,6 +184,7 @@
                             class="mt-8 w-full bg-indigo-600 border border-transparent rounded-md py-3 px-8 flex items-center justify-center text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                             @click="submitAddToCart"
                             :disabled="!canAddToCart"
+                            aria-label="Añadir este producto a la cesta"
                         >
                             Añadir a la cesta
                         </button>
@@ -283,7 +297,6 @@ const quantity = ref(1);
 const currentMainImage = ref(props.product.main_image);
 const cartStore = useCartStore();
 
-
 const formatPrice = (price) => {
     return new Intl.NumberFormat("es-ES", {
         style: "currency",
@@ -296,10 +309,10 @@ const changeMainImage = (image) => {
 };
 
 const availableSizes = computed(() => {
-    return props.product.sizes.map(size => ({
+    return props.product.sizes.map((size) => ({
         id: size.id,
         name: size.name,
-        stock: size.pivot?.stock || 0
+        stock: size.pivot?.stock || 0,
     }));
 });
 
@@ -310,12 +323,12 @@ const maxQuantity = computed(() => {
 });
 
 const canAddToCart = computed(() => {
-    return selectedSize.value !== null &&
+    return (
+        selectedSize.value !== null &&
         quantity.value > 0 &&
-        quantity.value <= maxQuantity.value;
+        quantity.value <= maxQuantity.value
+    );
 });
-
-
 
 const estimatedDeliveryDate = computed(() => {
     const date = new Date();
@@ -349,7 +362,9 @@ const submitAddToCart = async () => {
         await form.post(route("cart.add"), {
             preserveScroll: true,
             onSuccess: () => {
-                const size = availableSizes.value.find((s) => s.id === selectedSize.value);
+                const size = availableSizes.value.find(
+                    (s) => s.id === selectedSize.value
+                );
                 cartStore.addItem(
                     {
                         id: props.product.id,
@@ -372,7 +387,7 @@ const submitAddToCart = async () => {
             onError: (errors) => {
                 toast.error(
                     "Error al añadir el producto al carrito: " +
-                    Object.values(errors).join(", "),
+                        Object.values(errors).join(", "),
                     {
                         position: toast.POSITION.TOP_RIGHT,
                         autoClose: 3000,
@@ -381,12 +396,11 @@ const submitAddToCart = async () => {
             },
         });
     } catch (error) {
-        console.error('Error al añadir al carrito:', error);
-        toast.error('Error de conexión al añadir al carrito', {
+        console.error("Error al añadir al carrito:", error);
+        toast.error("Error de conexión al añadir al carrito", {
             position: toast.POSITION.TOP_RIGHT,
             autoClose: 3000,
         });
     }
 };
 </script>
-

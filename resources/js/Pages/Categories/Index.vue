@@ -46,11 +46,12 @@
                             :class="
                                 isScrolled ? 'text-indigo-600' : 'text-white'
                             "
+                            aria-label="Ir a la página principal de TrendClothes"
                             >TrendClothes</Link
                         >
                     </div>
 
-                    <!-- Menú de Escritorio -->
+                    <!-- Menú de escritorio -->
                     <div
                         class="hidden md:flex md:items-center md:ml-6 md:space-x-8"
                     >
@@ -65,7 +66,7 @@
                                     ? 'text-gray-900 hover:text-indigo-600'
                                     : 'text-white hover:text-gray-200',
                             ]"
-                            aria-label="Ir a Inicio"
+                            aria-label="Ir a la página de inicio"
                         >
                             Inicio
                         </Link>
@@ -80,7 +81,7 @@
                                     ? 'text-gray-900 hover:text-indigo-600'
                                     : 'text-white hover:text-gray-200',
                             ]"
-                            aria-label="Ir a Categorías"
+                            aria-label="Ver todas las categorías"
                         >
                             Categorías
                         </Link>
@@ -95,15 +96,15 @@
                                     ? 'text-gray-900 hover:text-indigo-600'
                                     : 'text-white hover:text-gray-200',
                             ]"
-                            aria-label="Ir a Sobre Nosotros"
+                            aria-label="Conocer más sobre nosotros"
                         >
-                            Sobre Nosotros
+                            Nosotros
                         </Link>
                     </div>
 
-                    <!-- Menú Derecho (Carrito y Usuario) -->
+                    <!-- Menú derecho (Carrito y Usuario) -->
                     <div class="flex items-center space-x-4">
-                        <!-- Carrito con Vista Previa al Pasar el Ratón -->
+                        <!-- Carrito con vista previa al pasar el mouse -->
                         <div class="relative group">
                             <Link
                                 :href="route('cart.index')"
@@ -113,6 +114,7 @@
                                         ? 'text-gray-900 hover:text-indigo-600'
                                         : 'text-white hover:text-indigo-300'
                                 "
+                                aria-label="Ir al carrito de compras"
                             >
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
@@ -135,7 +137,7 @@
                                     {{ cartCount }}
                                 </span>
                             </Link>
-                            <!-- Vista Previa del Carrito -->
+                            <!-- Vista previa del carrito desplegable -->
                             <div
                                 class="fixed md:absolute left-0 md:left-auto right-0 md:right-auto mt-2 w-full md:w-80 bg-white rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none group-hover:pointer-events-auto z-10"
                                 style="
@@ -172,7 +174,7 @@
                                                     {{ item.product.name }}
                                                 </p>
                                                 <p
-                                                    class="text-xs text-gray-600"
+                                                    class="text-xs text-gray-500"
                                                 >
                                                     Cantidad:
                                                     {{ item.quantity }}
@@ -190,12 +192,13 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <p v-else class="text-sm text-gray-600">
+                                    <p v-else class="text-sm text-gray-500">
                                         Tu carrito está vacío
                                     </p>
                                     <Link
                                         :href="route('cart.index')"
                                         class="mt-4 block text-center text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md py-2"
+                                        aria-label="Ver detalles del carrito"
                                     >
                                         Ver Carrito
                                     </Link>
@@ -203,8 +206,8 @@
                             </div>
                         </div>
 
-                        <!-- Menú de Usuario -->
-                        <template v-if="$page.props.auth.user">
+                        <!-- Menú de usuario -->
+                        <template v-if="page.props.auth.user">
                             <div class="hidden md:block">
                                 <Dropdown align="right" width="48">
                                     <template #trigger>
@@ -215,7 +218,7 @@
                                                     ? 'text-gray-900 hover:text-indigo-600'
                                                     : 'text-white hover:text-gray-200'
                                             "
-                                            aria-label="Menú de usuario"
+                                            aria-label="Abrir menú de usuario"
                                         >
                                             <svg
                                                 xmlns="http://www.w3.org/2000/svg"
@@ -231,18 +234,21 @@
                                                     d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                                                 />
                                             </svg>
+                                            <span class="sr-only"
+                                                >Menú de usuario</span
+                                            >
                                         </button>
                                     </template>
                                     <template #content>
                                         <DropdownLink
                                             :href="route('profile.edit')"
+                                            aria-label="Editar perfil"
                                             >Perfil</DropdownLink
                                         >
                                         <DropdownLink
-                                            v-if="
-                                                $page.props.auth.user.is_admin
-                                            "
+                                            v-if="page.props.auth.user.is_admin"
                                             :href="route('admin.dashboard')"
+                                            aria-label="Ir al panel de administración"
                                         >
                                             Panel de Administración
                                         </DropdownLink>
@@ -250,6 +256,7 @@
                                             :href="route('logout')"
                                             method="post"
                                             as="button"
+                                            aria-label="Cerrar sesión"
                                         >
                                             Cerrar Sesión
                                         </DropdownLink>
@@ -266,12 +273,12 @@
                                         ? 'text-gray-900 hover:text-indigo-600'
                                         : 'text-white hover:text-gray-200'
                                 "
-                                aria-label="Iniciar Sesión"
+                                aria-label="Iniciar sesión"
                             >
                                 Iniciar Sesión
                             </Link>
                             <Link
-                                v-if="$page.props.canRegister"
+                                v-if="page.props.canRegister"
                                 :href="route('register')"
                                 class="text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-md hidden md:block"
                                 aria-label="Registrarse"
@@ -280,14 +287,14 @@
                             </Link>
                         </template>
 
-                        <!-- Botón de Menú Móvil -->
+                        <!-- Botón de menú móvil -->
                         <div class="md:hidden">
                             <button
                                 @click="mobileMenuOpen = !mobileMenuOpen"
                                 class="focus:outline-none"
                                 :class="
                                     isScrolled
-                                        ? 'text-gray-600 hover:text-gray-700'
+                                        ? 'text-gray-500 hover:text-gray-700'
                                         : 'text-white hover:text-gray-200'
                                 "
                                 aria-label="Abrir menú móvil"
@@ -324,162 +331,158 @@
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Contenido del Menú Móvil -->
-                <div v-if="mobileMenuOpen" class="md:hidden fixed inset-0 z-50">
-                    <div
-                        class="absolute inset-0 overflow-y-auto bg-gray-900 bg-opacity-80 backdrop-blur-md"
-                        style="
-                            border: 0;
-                            bottom: 0;
-                            height: 100%;
-                            left: 0;
-                            overflow-y: scroll;
-                            padding: 0;
-                            position: absolute;
-                            right: 20px;
-                            width: calc(100% - 20px);
-                        "
-                    >
-                        <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-                            <div class="flex justify-end p-4">
-                                <button
-                                    @click="mobileMenuOpen = false"
-                                    class="text-white hover:text-gray-300 focus:outline-none"
-                                    aria-label="Cerrar menú móvil"
+            <!-- Contenido del menú móvil -->
+            <div v-if="mobileMenuOpen" class="md:hidden fixed inset-0 z-50">
+                <div
+                    class="absolute inset-0 overflow-y-auto bg-gray-900 bg-opacity-80 backdrop-blur-md"
+                    style="
+                        border: 0;
+                        bottom: 0;
+                        height: 100%;
+                        left: 0;
+                        overflow-y: scroll;
+                        padding: 0;
+                        right: 20px;
+                        width: calc(100% - 20px);
+                    "
+                >
+                    <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                        <div class="flex justify-end p-4">
+                            <button
+                                @click="mobileMenuOpen = false"
+                                class="text-white hover:text-gray-300 focus:outline-none"
+                                aria-label="Cerrar menú móvil"
+                            >
+                                <svg
+                                    class="h-8 w-8"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
                                 >
-                                    <svg
-                                        class="h-8 w-8"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M6 18L18 6M6 6l12 12"
+                                    />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div class="flex flex-col items-center mt-8">
+                            <Link
+                                :href="route('home')"
+                                class="block px-3 py-4 text-xl font-medium text-white border-b border-gray-700 w-full text-center"
+                                :class="
+                                    route().current('home')
+                                        ? 'text-indigo-300'
+                                        : 'hover:text-gray-300'
+                                "
+                                @click="mobileMenuOpen = false"
+                                aria-label="Ir a la página de inicio"
+                            >
+                                Inicio
+                            </Link>
+                            <Link
+                                :href="route('categories.index')"
+                                class="block px-3 py-4 text-xl font-medium text-white border-b border-gray-700 w-full text-center"
+                                :class="
+                                    route().current('categories.*')
+                                        ? 'text-indigo-300'
+                                        : 'hover:text-gray-300'
+                                "
+                                @click="mobileMenuOpen = false"
+                                aria-label="Ver todas las categorías"
+                            >
+                                Categorías
+                            </Link>
+                            <Link
+                                :href="route('about')"
+                                class="block px-3 py-4 text-xl font-medium text-white border-b border-gray-700 w-full text-center"
+                                :class="
+                                    route().current('about')
+                                        ? 'text-indigo-300'
+                                        : 'hover:text-gray-300'
+                                "
+                                @click="mobileMenuOpen = false"
+                                aria-label="Conocer más sobre nosotros"
+                            >
+                                Sobre Nosotros
+                            </Link>
+
+                            <template v-if="page.props.auth.user">
+                                <div class="w-full">
+                                    <button
+                                        @click="subMenuOpen = !subMenuOpen"
+                                        class="block px-3 py-4 text-xl font-medium text-white border-b border-gray-700 w-full text-center hover:text-gray-300"
+                                        aria-label="Abrir menú de mi TrendClothes"
                                     >
-                                        <path
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            stroke-width="2"
-                                            d="M6 18L18 6M6 6l12 12"
-                                        />
-                                    </svg>
-                                </button>
-                            </div>
-
-                            <div class="flex flex-col items-center mt-8">
-                                <Link
-                                    :href="route('home')"
-                                    class="block px-3 py-4 text-xl font-medium text-white border-b border-gray-700 w-full text-center"
-                                    :class="
-                                        route().current('home')
-                                            ? 'text-indigo-300'
-                                            : 'hover:text-gray-300'
-                                    "
-                                    @click="mobileMenuOpen = false"
-                                    aria-label="Ir a Inicio"
-                                >
-                                    Inicio
-                                </Link>
-                                <Link
-                                    :href="route('categories.index')"
-                                    class="block px-3 py-4 text-xl font-medium text-white border-b border-gray-700 w-full text-center"
-                                    :class="
-                                        route().current('categories.*')
-                                            ? 'text-indigo-300'
-                                            : 'hover:text-gray-300'
-                                    "
-                                    @click="mobileMenuOpen = false"
-                                    aria-label="Ir a Categorías"
-                                >
-                                    Categorías
-                                </Link>
-                                <Link
-                                    :href="route('about')"
-                                    class="block px-3 py-4 text-xl font-medium text-white border-b border-gray-700 w-full text-center"
-                                    :class="
-                                        route().current('about')
-                                            ? 'text-indigo-300'
-                                            : 'hover:text-gray-300'
-                                    "
-                                    @click="mobileMenuOpen = false"
-                                    aria-label="Ir a Sobre Nosotros"
-                                >
-                                    Sobre Nosotros
-                                </Link>
-
-                                <template v-if="$page.props.auth.user">
-                                    <div class="w-full">
-                                        <button
-                                            @click="subMenuOpen = !subMenuOpen"
-                                            class="block px-3 py-4 text-xl font-medium text-white border-b border-gray-700 w-full text-center hover:text-gray-300"
-                                            aria-label="Abrir menú de usuario"
+                                        MI TRENDCLOTHES
+                                    </button>
+                                    <div
+                                        v-if="subMenuOpen"
+                                        class="pl-6 space-y-2"
+                                    >
+                                        <Link
+                                            :href="route('profile.edit')"
+                                            class="block px-3 py-2 text-lg font-medium text-white border-b border-gray-700 w-full text-center hover:text-gray-300"
+                                            @click="
+                                                mobileMenuOpen = false;
+                                                subMenuOpen = false;
+                                            "
+                                            aria-label="Editar perfil"
                                         >
-                                            MI TRENDCLOTHES
-                                        </button>
-                                        <div
-                                            v-if="subMenuOpen"
-                                            class="pl-6 space-y-2"
+                                            Mi Perfil
+                                        </Link>
+                                        <Link
+                                            v-if="page.props.auth.user.is_admin"
+                                            :href="route('admin.dashboard')"
+                                            class="block px-3 py-2 text-lg font-medium text-white border-b border-gray-700 w-full text-center hover:text-gray-300"
+                                            @click="
+                                                mobileMenuOpen = false;
+                                                subMenuOpen = false;
+                                            "
+                                            aria-label="Ir al panel de administración"
                                         >
-                                            <Link
-                                                :href="route('profile.edit')"
-                                                class="block px-3 py-2 text-lg font-medium text-white border-b border-gray-700 w-full text-center hover:text-gray-300"
-                                                @click="
-                                                    mobileMenuOpen = false;
-                                                    subMenuOpen = false;
-                                                "
-                                                aria-label="Ir a Mi Perfil"
-                                            >
-                                                Mi Perfil
-                                            </Link>
-                                            <Link
-                                                v-if="
-                                                    $page.props.auth.user
-                                                        .is_admin
-                                                "
-                                                :href="route('admin.dashboard')"
-                                                class="block px-3 py-2 text-lg font-medium text-white border-b border-gray-700 w-full text-center hover:text-gray-300"
-                                                @click="
-                                                    mobileMenuOpen = false;
-                                                    subMenuOpen = false;
-                                                "
-                                                aria-label="Ir a Panel de Administración"
-                                            >
-                                                Panel de Administración
-                                            </Link>
-                                            <Link
-                                                :href="route('logout')"
-                                                method="post"
-                                                as="button"
-                                                class="block px-3 py-2 text-lg font-medium text-white border-b border-gray-700 w-full text-center hover:text-gray-300"
-                                                @click="
-                                                    mobileMenuOpen = false;
-                                                    subMenuOpen = false;
-                                                "
-                                                aria-label="Cerrar Sesión"
-                                            >
-                                                Cerrar Sesión
-                                            </Link>
-                                        </div>
+                                            Panel de Administración
+                                        </Link>
+                                        <Link
+                                            :href="route('logout')"
+                                            method="post"
+                                            as="button"
+                                            class="block px-3 py-2 text-lg font-medium text-white border-b border-gray-700 w-full text-center hover:text-gray-300"
+                                            @click="
+                                                mobileMenuOpen = false;
+                                                subMenuOpen = false;
+                                            "
+                                            aria-label="Cerrar sesión"
+                                        >
+                                            Cerrar Sesión
+                                        </Link>
                                     </div>
-                                </template>
-                                <template v-else>
-                                    <Link
-                                        :href="route('login')"
-                                        class="block px-3 py-4 text-xl font-medium text-white border-b border-gray-700 w-full text-center hover:text-gray-300"
-                                        @click="mobileMenuOpen = false"
-                                        aria-label="Iniciar Sesión"
-                                    >
-                                        Iniciar Sesión
-                                    </Link>
-                                    <Link
-                                        v-if="$page.props.canRegister"
-                                        :href="route('register')"
-                                        class="block px-3 py-4 text-xl font-medium text-white border-b border-gray-700 w-full text-center hover:text-gray-300"
-                                        @click="mobileMenuOpen = false"
-                                        aria-label="Registrarse"
-                                    >
-                                        Registrarse
-                                    </Link>
-                                </template>
-                            </div>
+                                </div>
+                            </template>
+                            <template v-else>
+                                <Link
+                                    :href="route('login')"
+                                    class="block px-3 py-4 text-xl font-medium text-white border-b border-gray-700 w-full text-center hover:text-gray-300"
+                                    @click="mobileMenuOpen = false"
+                                    aria-label="Iniciar sesión"
+                                >
+                                    Iniciar Sesión
+                                </Link>
+                                <Link
+                                    v-if="page.props.canRegister"
+                                    :href="route('register')"
+                                    class="block px-3 py-4 text-xl font-medium text-white border-b border-gray-700 w-full text-center hover:text-gray-300"
+                                    @click="mobileMenuOpen = false"
+                                    aria-label="Registrarse"
+                                >
+                                    Registrarse
+                                </Link>
+                            </template>
                         </div>
                     </div>
                 </div>
@@ -1287,8 +1290,8 @@ const handleScroll = () => {
 // Estados para el carrusel
 const carouselTrack = ref(null);
 const currentSlide = ref(0);
-const slideGap = 24; 
-const autoScrollInterval = ref(null); 
+const slideGap = 24;
+const autoScrollInterval = ref(null);
 
 // Número de diapositivas por vista según el tamaño de la pantalla
 const slidesPerView = ref(3);
@@ -1368,7 +1371,7 @@ onMounted(() => {
     cartStore.loadFromLocalStorage();
     window.addEventListener("scroll", handleScroll);
     window.addEventListener("resize", updateContainerWidth);
-    window.addEventListener("resize", updateSlidesPerView); 
+    window.addEventListener("resize", updateSlidesPerView);
     updateContainerWidth();
     updateSlidesPerView();
     startAutoScroll();

@@ -46,6 +46,7 @@
                             :class="
                                 isScrolled ? 'text-indigo-600' : 'text-white'
                             "
+                            aria-label="Ir a la página principal de TrendClothes"
                             >TrendClothes</Link
                         >
                     </div>
@@ -65,6 +66,7 @@
                                     ? 'text-gray-900 hover:text-indigo-600'
                                     : 'text-white hover:text-gray-200',
                             ]"
+                            aria-label="Ir a la página de inicio"
                         >
                             Inicio
                         </Link>
@@ -79,6 +81,7 @@
                                     ? 'text-gray-900 hover:text-indigo-600'
                                     : 'text-white hover:text-gray-200',
                             ]"
+                            aria-label="Ver todas las categorías"
                         >
                             Categorías
                         </Link>
@@ -93,6 +96,7 @@
                                     ? 'text-gray-900 hover:text-indigo-600'
                                     : 'text-white hover:text-gray-200',
                             ]"
+                            aria-label="Conocer más sobre nosotros"
                         >
                             Nosotros
                         </Link>
@@ -110,6 +114,7 @@
                                         ? 'text-gray-900 hover:text-indigo-600'
                                         : 'text-white hover:text-indigo-300'
                                 "
+                                aria-label="Ir al carrito de compras"
                             >
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
@@ -193,6 +198,7 @@
                                     <Link
                                         :href="route('cart.index')"
                                         class="mt-4 block text-center text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md py-2"
+                                        aria-label="Ver detalles del carrito"
                                     >
                                         Ver Carrito
                                     </Link>
@@ -212,7 +218,7 @@
                                                     ? 'text-gray-900 hover:text-indigo-600'
                                                     : 'text-white hover:text-gray-200'
                                             "
-                                            aria-label="Menú de usuario"
+                                            aria-label="Abrir menú de usuario"
                                         >
                                             <svg
                                                 xmlns="http://www.w3.org/2000/svg"
@@ -236,11 +242,13 @@
                                     <template #content>
                                         <DropdownLink
                                             :href="route('profile.edit')"
+                                            aria-label="Editar perfil"
                                             >Perfil</DropdownLink
                                         >
                                         <DropdownLink
                                             v-if="page.props.auth.user.is_admin"
                                             :href="route('admin.dashboard')"
+                                            aria-label="Ir al panel de administración"
                                         >
                                             Panel de Administración
                                         </DropdownLink>
@@ -248,6 +256,7 @@
                                             :href="route('logout')"
                                             method="post"
                                             as="button"
+                                            aria-label="Cerrar sesión"
                                         >
                                             Cerrar Sesión
                                         </DropdownLink>
@@ -264,6 +273,7 @@
                                         ? 'text-gray-900 hover:text-indigo-600'
                                         : 'text-white hover:text-gray-200'
                                 "
+                                aria-label="Iniciar sesión"
                             >
                                 Iniciar Sesión
                             </Link>
@@ -271,6 +281,7 @@
                                 v-if="page.props.canRegister"
                                 :href="route('register')"
                                 class="text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-md hidden md:block"
+                                aria-label="Registrarse"
                             >
                                 Registrarse
                             </Link>
@@ -286,7 +297,7 @@
                                         ? 'text-gray-500 hover:text-gray-700'
                                         : 'text-white hover:text-gray-200'
                                 "
-                                aria-label="Abrir menú"
+                                aria-label="Abrir menú móvil"
                             >
                                 <svg
                                     v-if="!mobileMenuOpen"
@@ -342,7 +353,7 @@
                             <button
                                 @click="mobileMenuOpen = false"
                                 class="text-white hover:text-gray-300 focus:outline-none"
-                                aria-label="Cerrar menú"
+                                aria-label="Cerrar menú móvil"
                             >
                                 <svg
                                     class="h-8 w-8"
@@ -370,6 +381,7 @@
                                         : 'hover:text-gray-300'
                                 "
                                 @click="mobileMenuOpen = false"
+                                aria-label="Ir a la página de inicio"
                             >
                                 Inicio
                             </Link>
@@ -382,6 +394,7 @@
                                         : 'hover:text-gray-300'
                                 "
                                 @click="mobileMenuOpen = false"
+                                aria-label="Ver todas las categorías"
                             >
                                 Categorías
                             </Link>
@@ -394,6 +407,7 @@
                                         : 'hover:text-gray-300'
                                 "
                                 @click="mobileMenuOpen = false"
+                                aria-label="Conocer más sobre nosotros"
                             >
                                 Sobre Nosotros
                             </Link>
@@ -403,6 +417,7 @@
                                     <button
                                         @click="subMenuOpen = !subMenuOpen"
                                         class="block px-3 py-4 text-xl font-medium text-white border-b border-gray-700 w-full text-center hover:text-gray-300"
+                                        aria-label="Abrir menú de mi TrendClothes"
                                     >
                                         MI TRENDCLOTHES
                                     </button>
@@ -417,6 +432,7 @@
                                                 mobileMenuOpen = false;
                                                 subMenuOpen = false;
                                             "
+                                            aria-label="Editar perfil"
                                         >
                                             Mi Perfil
                                         </Link>
@@ -428,6 +444,7 @@
                                                 mobileMenuOpen = false;
                                                 subMenuOpen = false;
                                             "
+                                            aria-label="Ir al panel de administración"
                                         >
                                             Panel de Administración
                                         </Link>
@@ -440,6 +457,7 @@
                                                 mobileMenuOpen = false;
                                                 subMenuOpen = false;
                                             "
+                                            aria-label="Cerrar sesión"
                                         >
                                             Cerrar Sesión
                                         </Link>
@@ -451,6 +469,7 @@
                                     :href="route('login')"
                                     class="block px-3 py-4 text-xl font-medium text-white border-b border-gray-700 w-full text-center hover:text-gray-300"
                                     @click="mobileMenuOpen = false"
+                                    aria-label="Iniciar sesión"
                                 >
                                     Iniciar Sesión
                                 </Link>
@@ -459,6 +478,7 @@
                                     :href="route('register')"
                                     class="block px-3 py-4 text-xl font-medium text-white border-b border-gray-700 w-full text-center hover:text-gray-300"
                                     @click="mobileMenuOpen = false"
+                                    aria-label="Registrarse"
                                 >
                                     Registrarse
                                 </Link>
