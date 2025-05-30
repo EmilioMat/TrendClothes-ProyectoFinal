@@ -47,17 +47,17 @@ Route::get('/invoices/factura-{id}.pdf', function ($id) {
         'user' => $user
     ]);
 
-    return $pdf->stream('factura-'.$order->id.'.pdf');
+    return $pdf->stream('factura-' . $order->id . '.pdf');
 })->name('invoice.download');
 
 Route::get('/descargar-factura/{order}', function (Order $order) {
     $user = $order->user;
-    
+
     $pdf = Pdf::loadView('invoices.invoice-pdf', [
         'order' => $order,
         'user' => $user
     ]);
-    
+
     return $pdf->download('factura-' . $order->id . '.pdf');
 })->name('invoice.download');
 
@@ -74,6 +74,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/checkout/cancel/{order}', [CheckoutController::class, 'cancel'])->name('checkout.cancel');
     Route::post('/addresses', [AddressController::class, 'store'])->name('addresses.store');
     Route::post('/cart/add', [CartController::class, 'addItem'])->name('cart.add');
+    Route::post('/cart/remove', [CartController::class, 'removeItem'])->name('cart.remove');
 });
 
 // Rutas públicas de productos y carrito

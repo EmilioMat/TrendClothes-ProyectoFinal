@@ -10,13 +10,14 @@ export const useCartStore = defineStore("cart", {
         addItem(product, size = null, quantity = 1, sizeId = null) {
             if (!product || !product.id || !product.name || !product.price) {
                 console.error("Producto inválido:", product);
-                throw new Error("El producto no tiene la información requerida");
+                throw new Error(
+                    "El producto no tiene la información requerida"
+                );
             }
 
             const existingItem = this.items.find(
                 (item) =>
-                    item.product.id === product.id &&
-                    item.size_id === sizeId
+                    item.product.id === product.id && item.size_id === sizeId
             );
 
             if (existingItem) {
@@ -28,7 +29,9 @@ export const useCartStore = defineStore("cart", {
                         name: product.name,
                         price: product.price,
                         main_image: product.main_image || null,
-                        main_image_url: product.main_image ? `/storage/${product.main_image}` : null,
+                        main_image_url: product.main_image
+                            ? `/storage/${product.main_image}`
+                            : null,
                     },
                     size,
                     size_id: sizeId,
@@ -40,7 +43,7 @@ export const useCartStore = defineStore("cart", {
             this.saveToLocalStorage();
         },
         removeItem(itemId) {
-            const [productId, sizeId] = itemId.split('-');
+            const [productId, sizeId] = itemId.split("-");
             const index = this.items.findIndex(
                 (item) => item.product.id == productId && item.size_id == sizeId
             );
@@ -51,7 +54,7 @@ export const useCartStore = defineStore("cart", {
             }
         },
         updateQuantity(itemId, quantity) {
-            const [productId, sizeId] = itemId.split('-');
+            const [productId, sizeId] = itemId.split("-");
             const item = this.items.find(
                 (item) => item.product.id == productId && item.size_id == sizeId
             );
@@ -66,10 +69,12 @@ export const useCartStore = defineStore("cart", {
                 this.saveToLocalStorage();
             }
         },
+        // En stores/cart.js
         clearCart() {
             this.items = [];
             this.count = 0;
-            this.saveToLocalStorage();
+            localStorage.removeItem("cart");
+            sessionStorage.removeItem("cart");
         },
         saveToLocalStorage() {
             localStorage.setItem("cart", JSON.stringify(this.items));
@@ -88,18 +93,27 @@ export const useCartStore = defineStore("cart", {
             );
         },
         syncWithBackend(items = []) {
+            // Limpiar primero para evitar duplicados
+            this.items = [];
+
+            // Sincronizar con los nuevos items
             this.items = items.map((item) => ({
                 product: {
                     id: item.product.id,
                     name: item.product.name,
                     price: item.product.price,
                     main_image: item.product.main_image,
-                    main_image_url: item.product.main_image_url || (item.product.main_image ? `/storage/${item.product.main_image}` : null),
+                    main_image_url:
+                        item.product.main_image_url ||
+                        (item.product.main_image
+                            ? `/storage/${item.product.main_image}`
+                            : null),
                 },
                 size: item.size,
                 size_id: item.size_id,
                 quantity: item.quantity,
             }));
+
             this.updateCount();
             this.saveToLocalStorage();
         },
