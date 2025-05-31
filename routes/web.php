@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\AdminSizeController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\InformesController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CheckoutController;
@@ -129,6 +130,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::delete('/users/destroy/{id}', [AdminUserController::class, 'destroy'])->name('admin.users.destroy');
     Route::delete('/users/delete-multiple', [AdminUserController::class, 'deleteMultiple'])->name('admin.users.delete-multiple');
     Route::delete('/users/delete-all', [AdminUserController::class, 'deleteAll'])->name('admin.users.delete-all');
+
+    // Informes
+    Route::get('/informes', [InformesController::class, 'index'])->name('admin.informes.index');
 });
 
 require __DIR__ . '/auth.php';
