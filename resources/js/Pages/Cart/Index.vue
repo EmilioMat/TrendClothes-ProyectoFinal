@@ -66,11 +66,11 @@
                                         <!-- Detalles del producto -->
                                         <div class="ml-4 flex-1">
                                             <div class="flex justify-between">
-                                                <h3
+                                                <h2
                                                     class="text-lg font-medium text-gray-900"
                                                 >
                                                     {{ item.product.name }}
-                                                </h3>
+                                                </h2>
                                                 <p
                                                     class="ml-4 text-lg font-medium text-gray-900"
                                                 >
@@ -101,6 +101,7 @@
                                                             )
                                                         "
                                                         class="text-gray-500 hover:text-indigo-600"
+                                                        aria-label="Decrease quantity"
                                                     >
                                                         <svg
                                                             xmlns="http://www.w3.org/2000/svg"
@@ -128,6 +129,7 @@
                                                             )
                                                         "
                                                         class="text-gray-500 hover:text-indigo-600"
+                                                        aria-label="Increase quantity"
                                                     >
                                                         <svg
                                                             xmlns="http://www.w3.org/2000/svg"
@@ -207,7 +209,14 @@
                                     >
                                         Dirección de envío
                                     </h3>
+                                    <label
+                                        for="address-select"
+                                        class="block text-sm font-medium text-gray-700"
+                                    >
+                                        Seleccionar dirección de envío
+                                    </label>
                                     <select
+                                        id="address-select"
                                         v-model="selectedAddress"
                                         class="w-full p-2 border rounded-md"
                                     >

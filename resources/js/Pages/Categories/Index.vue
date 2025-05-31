@@ -1127,9 +1127,9 @@
 
         <!-- Pie de Página -->
         <footer class="bg-gray-800 text-white py-12">
-            <!-- Contenido del Footer -->
             <div class="mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <!-- Sección TrendClothes (sin cambios) -->
                     <div>
                         <span class="text-lg font-semibold mb-4 inline-block"
                             >TrendClothes</span
@@ -1138,6 +1138,7 @@
                             La mejor selección de moda para todos los estilos.
                         </p>
                     </div>
+                    <!-- Sección Mapa del Sitio (sin cambios) -->
                     <div class="ml-8">
                         <span class="text-lg font-semibold mb-4 inline-block"
                             >Mapa del Sitio</span
@@ -1169,6 +1170,7 @@
                             </li>
                         </ul>
                     </div>
+                    <!-- Sección Ayuda (con cambios) -->
                     <div>
                         <span class="text-lg font-semibold mb-4 inline-block"
                             >Ayuda</span
@@ -1177,7 +1179,7 @@
                             <li class="relative group">
                                 <a
                                     href="#"
-                                    class="text-gray-400 hover:text-white"
+                                    class="text-gray-400 hover:text-white underline hover:no-underline"
                                     aria-label="Página de Contacto (en construcción)"
                                     >Contacto</a
                                 >
@@ -1189,7 +1191,7 @@
                             <li class="relative group">
                                 <a
                                     href="#"
-                                    class="text-gray-400 hover:text-white"
+                                    class="text-gray-400 hover:text-white underline hover:no-underline"
                                     aria-label="Página de Envíos (en construcción)"
                                     >Envíos</a
                                 >
@@ -1201,7 +1203,7 @@
                             <li class="relative group">
                                 <a
                                     href="#"
-                                    class="text-gray-400 hover:text-white"
+                                    class="text-gray-400 hover:text-white underline hover:no-underline"
                                     aria-label="Página de Devoluciones (en construcción)"
                                     >Devoluciones</a
                                 >
@@ -1212,6 +1214,7 @@
                             </li>
                         </ul>
                     </div>
+                    <!-- Sección Legal (con cambios) -->
                     <div>
                         <span class="text-lg font-semibold mb-4 inline-block"
                             >Legal</span
@@ -1220,7 +1223,7 @@
                             <li class="relative group">
                                 <a
                                     href="#"
-                                    class="text-gray-400 hover:text-white"
+                                    class="text-gray-400 hover:text-white underline hover:no-underline"
                                     aria-label="Página de Términos y Condiciones (en construcción)"
                                     >Términos y condiciones</a
                                 >
@@ -1232,7 +1235,7 @@
                             <li class="relative group">
                                 <a
                                     href="#"
-                                    class="text-gray-400 hover:text-white"
+                                    class="text-gray-400 hover:text-white underline hover:no-underline"
                                     aria-label="Página de Política de Privacidad (en construcción)"
                                     >Política de privacidad</a
                                 >
