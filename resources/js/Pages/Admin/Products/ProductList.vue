@@ -19,6 +19,7 @@ const productImages = ref([]);
 const validationModalVisible = ref(false); // Modal para validación
 const validationErrors = ref([]); // Errores de validación
 const activeDropdown = ref(null); // Para rastrear el dropdown abierto
+const isMobile = ref(window.innerWidth < 640);
 
 // Form data
 const id = ref("");
@@ -458,10 +459,12 @@ function previousPage() {
 // Lifecycle hooks for dropdown management
 onMounted(() => {
     document.addEventListener("click", closeDropdownsOnOutsideClick);
+    window.addEventListener('resize', () => { isMobile.value = window.innerWidth < 640; });
 });
 
 onUnmounted(() => {
     document.removeEventListener("click", closeDropdownsOnOutsideClick);
+    window.removeEventListener('resize', () => { isMobile.value = window.innerWidth < 640; });
 });
 
 watch(
@@ -487,15 +490,6 @@ const closeDropdownsOnOutsideClick = (e) => {
         activeDropdown.value = null;
     }
 };
-
-// Lifecycle hooks
-onMounted(() => {
-    document.addEventListener("click", closeDropdownsOnOutsideClick);
-});
-
-onUnmounted(() => {
-    document.removeEventListener("click", closeDropdownsOnOutsideClick);
-});
 
 // Resetear dropdown al cambiar de página o buscar
 watch(
@@ -526,14 +520,16 @@ const getSizeName = (id) => {
 </script>
 
 <template>
-    <section class="p-3 sm:p-5">
+    <section class="p-2 sm:p-5">
         <!-- Validation Modal -->
         <el-dialog
             v-model="validationModalVisible"
             title="Errores de Validación"
-            width="30%"
+            :width="isMobile ? '95%' : '30%'"
+            :fullscreen="isMobile"
+            class="custom-dialog"
         >
-            <div class="text-sm text-gray-600 dark:text-gray-400">
+            <div class="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                 <p>Por favor complete todos los campos requeridos:</p>
                 <ul class="mt-2">
                     <li
@@ -557,68 +553,61 @@ const getSizeName = (id) => {
         <!-- Dialog for adding/editing product -->
         <el-dialog
             v-model="dialogVisible"
-            :title="editMode ? 'Edit Product' : 'Add Product'"
-            width="50%"
+            :title="editMode ? 'Editar Producto' : 'Añadir Producto'"
+            :width="isMobile ? '95%' : '50%'"
             :before-close="handleClose"
+            :fullscreen="isMobile"
+            class="custom-dialog"
         >
             <form
                 @submit.prevent="editMode ? updateProduct() : addProduct()"
-                class="grid grid-cols-2 gap-6"
+                class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6"
             >
                 <!-- Left Column -->
-                <div>
-                    <div class="mb-4">
-                        <label class="block text-gray-700 font-medium mb-1"
-                            >Name *</label
+                <div class="space-y-3 sm:space-y-4">
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-1 text-xs sm:text-base"
+                            >Nombre *</label
                         >
                         <input
                             v-model="name"
                             type="text"
-                            class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            class="w-full border border-gray-300 rounded-lg p-1.5 sm:p-2 text-xs sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             required
                         />
                     </div>
-                    <div class="mb-4">
-                        <label class="block text-gray-700 font-medium mb-1"
-                            >Description *</label
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-1 text-xs sm:text-base"
+                            >Descripción *</label
                         >
                         <textarea
                             v-model="description"
-                            class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-24"
+                            class="w-full border border-gray-300 rounded-lg p-1.5 sm:p-2 text-xs sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-16 sm:h-24"
                             required
                         ></textarea>
                     </div>
-                    <div class="mb-4">
-                        <label class="block text-gray-700 font-medium mb-1"
-                            >Price *</label
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-1 text-xs sm:text-base"
+                            >Precio *</label
                         >
                         <input
                             v-model.number="price"
                             type="number"
                             step="0.01"
-                            class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            class="w-full border border-gray-300 rounded-lg p-1.5 sm:p-2 text-xs sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             required
                         />
                     </div>
-                    <!-- <div class="mb-4">
-                        <label class="block text-gray-700 font-medium mb-1">Stock *</label>
-                        <input
-                            v-model.number="stock"
-                            type="number"
-                            class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            required
-                        />
-                    </div> -->
-                    <div class="mb-4">
-                        <label class="block text-gray-700 font-medium mb-1"
-                            >Category *</label
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-1 text-xs sm:text-base"
+                            >Categoría *</label
                         >
                         <select
                             v-model.number="category_id"
-                            class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            class="w-full border border-gray-300 rounded-lg p-1.5 sm:p-2 text-xs sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             required
                         >
-                            <option value="">Select a category</option>
+                            <option value="">Selecciona una categoría</option>
                             <option
                                 v-for="category in categories"
                                 :key="category.id"
@@ -631,9 +620,9 @@ const getSizeName = (id) => {
                 </div>
 
                 <!-- Right Column -->
-                <div>
-                    <div class="mb-4">
-                        <label class="block text-gray-700 font-medium mb-1"
+                <div class="space-y-3 sm:space-y-4">
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-1 text-xs sm:text-base"
                             >Tallas y stock *</label
                         >
                         <el-form-item>
@@ -642,7 +631,7 @@ const getSizeName = (id) => {
                                 multiple
                                 filterable
                                 placeholder="Selecciona tallas"
-                                class="w-full"
+                                class="w-full text-xs sm:text-base"
                                 @change="handleSizeSelectionChange"
                             >
                                 <el-option
@@ -656,29 +645,28 @@ const getSizeName = (id) => {
                             <div
                                 v-for="item in sizesWithStock"
                                 :key="item.size_id"
-                                class="flex items-center gap-4 mt-2"
+                                class="flex items-center gap-2 sm:gap-4 mt-2"
                             >
                                 <el-input
                                     v-model.number="item.stock"
                                     type="number"
-                                    class="flex-1"
+                                    class="flex-1 text-xs sm:text-base"
                                     placeholder="Stock para la talla"
-                                    :prefix-icon="Plus"
                                 />
-                                <small class="text-gray-600">{{
+                                <small class="text-gray-600 text-xs sm:text-sm">{{
                                     getSizeName(item.size_id)
                                 }}</small>
                             </div>
                         </el-form-item>
                     </div>
 
-                    <div class="mb-4">
-                        <label class="block text-gray-700 font-medium mb-1"
-                            >Gender *</label
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-1 text-xs sm:text-base"
+                            >Género *</label
                         >
                         <select
                             v-model="gender"
-                            class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            class="w-full border border-gray-300 rounded-lg p-1.5 sm:p-2 text-xs sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             required
                         >
                             <option value="">Seleccionar género</option>
@@ -687,40 +675,40 @@ const getSizeName = (id) => {
                             <option value="unisex">Unisex</option>
                         </select>
                     </div>
-                    <div class="mb-4">
-                        <label class="block text-gray-700 font-medium mb-1"
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-1 text-xs sm:text-base"
                             >Color</label
                         >
                         <input
                             v-model="color"
                             type="text"
-                            class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="e.g., Black, Blue"
+                            class="w-full border border-gray-300 rounded-lg p-1.5 sm:p-2 text-xs sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="e.g., Negro, Azul"
                         />
                     </div>
-                    <div class="mb-4">
-                        <label class="block text-gray-700 font-medium mb-1"
-                            >Brand</label
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-1 text-xs sm:text-base"
+                            >Marca</label
                         >
                         <input
                             v-model="brand"
                             type="text"
-                            class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            class="w-full border border-gray-300 rounded-lg p-1.5 sm:p-2 text-xs sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             placeholder="e.g., Nike, Adidas"
                         />
                     </div>
-                    <div class="mb-4">
-                        <label class="block text-gray-700 font-medium mb-1"
-                            >Main Image *</label
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-1 text-xs sm:text-base"
+                            >Imágen principal *</label
                         >
                         <label
-                            class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-blue-300 rounded-lg bg-white hover:bg-gray-50 transition-colors cursor-pointer"
+                            class="flex flex-col items-center justify-center w-full h-20 sm:h-32 border-2 border-dashed border-blue-300 rounded-lg bg-white hover:bg-gray-50 transition-colors cursor-pointer"
                         >
                             <div
-                                class="flex flex-col items-center justify-center pt-5 pb-6"
+                                class="flex flex-col items-center justify-center pt-2 sm:pt-5 pb-2 sm:pb-6"
                             >
                                 <svg
-                                    class="w-8 h-8 text-blue-500"
+                                    class="w-5 sm:w-8 h-5 sm:h-8 text-blue-500"
                                     aria-hidden="true"
                                     xmlns="http://www.w3.org/2000/svg"
                                     fill="none"
@@ -734,8 +722,8 @@ const getSizeName = (id) => {
                                         d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
                                     />
                                 </svg>
-                                <p class="mt-2 text-sm text-gray-600">
-                                    Click to upload or drag and drop
+                                <p class="mt-1 text-xs text-gray-600">
+                                    Haga clic para cargar o arrastre y suelte
                                 </p>
                                 <p class="text-xs text-gray-500">
                                     PNG, JPG (MAX. 2MB)
@@ -752,25 +740,25 @@ const getSizeName = (id) => {
                             <img
                                 :src="mainImagePreview"
                                 alt="Main Image Preview"
-                                class="w-32 h-32 object-cover rounded-lg shadow-md"
+                                class="w-20 sm:w-32 h-20 sm:h-32 object-cover rounded-lg shadow-md"
                             />
                         </div>
                     </div>
                 </div>
 
                 <!-- Additional Images (spanning both columns) -->
-                <div class="col-span-2 mb-4">
-                    <label class="block text-gray-700 font-medium mb-1"
-                        >Additional Images</label
+                <div class="col-span-1 sm:col-span-2 mt-3 sm:mt-4">
+                    <label class="block text-gray-700 font-medium mb-1 text-xs sm:text-base"
+                        >Imágenes adicionales</label
                     >
                     <label
-                        class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-blue-300 rounded-lg bg-white hover:bg-gray-50 transition-colors cursor-pointer"
+                        class="flex flex-col items-center justify-center w-full h-20 sm:h-32 border-2 border-dashed border-blue-300 rounded-lg bg-white hover:bg-gray-50 transition-colors cursor-pointer"
                     >
                         <div
-                            class="flex flex-col items-center justify-center pt-5 pb-6"
+                            class="flex flex-col items-center justify-center pt-2 sm:pt-5 pb-2 sm:pb-6"
                         >
                             <svg
-                                class="w-8 h-8 text-blue-500"
+                                class="w-5 sm:w-8 h-5 sm:h-8 text-blue-500"
                                 aria-hidden="true"
                                 xmlns="http://www.w3.org/2000/svg"
                                 fill="none"
@@ -784,8 +772,8 @@ const getSizeName = (id) => {
                                     d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
                                 />
                             </svg>
-                            <p class="mt-2 text-sm text-gray-600">
-                                Click to upload or drag and drop
+                            <p class="mt-1 text-xs sm:text-sm text-gray-600">
+                                Haga clic para cargar o arrastre y suelte
                             </p>
                             <p class="text-xs text-gray-500">
                                 PNG, JPG (MAX. 2MB)
@@ -802,7 +790,7 @@ const getSizeName = (id) => {
                     </label>
                     <div
                         v-if="additionalImagesPreviews.length"
-                        class="mt-2 flex flex-wrap gap-4"
+                        class="mt-2 flex flex-wrap gap-2 sm:gap-4"
                     >
                         <div
                             v-for="(preview, index) in additionalImagesPreviews"
@@ -812,7 +800,7 @@ const getSizeName = (id) => {
                             <img
                                 :src="preview"
                                 alt="Additional Image Preview"
-                                class="w-32 h-32 object-cover rounded-lg shadow-md"
+                                class="w-20 sm:w-32 h-20 sm:h-32 object-cover rounded-lg shadow-md"
                             />
                             <button
                                 type="button"
@@ -820,7 +808,7 @@ const getSizeName = (id) => {
                                     additionalImagesPreviews.splice(index, 1);
                                     images.value.splice(index, 1);
                                 "
-                                class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600"
+                                class="absolute top-1 sm:top-2 right-1 sm:right-2 bg-red-500 text-white rounded-full w-5 sm:w-6 h-5 sm:h-6 flex items-center justify-center hover:bg-red-600"
                             >
                                 ×
                             </button>
@@ -830,13 +818,13 @@ const getSizeName = (id) => {
 
                 <!-- Existing Images (for edit mode) -->
                 <div
-                    class="col-span-2 mb-4"
+                    class="col-span-1 sm:col-span-2 mt-3 sm:mt-4"
                     v-if="editMode && productImages.length"
                 >
-                    <label class="block text-gray-700 font-medium mb-1"
-                        >Current Images</label
+                    <label class="block text-gray-700 font-medium mb-1 text-xs sm:text-base"
+                        >Imágenes actuales</label
                     >
-                    <div class="flex flex-wrap gap-4">
+                    <div class="flex flex-wrap gap-2 sm:gap-4">
                         <div
                             v-for="(image, index) in productImages"
                             :key="index"
@@ -844,12 +832,12 @@ const getSizeName = (id) => {
                         >
                             <img
                                 :src="image.url"
-                                class="w-32 h-32 object-cover rounded-lg shadow-md"
+                                class="w-20 sm:w-32 h-20 sm:h-32 object-cover rounded-lg shadow-md"
                             />
                             <button
                                 type="button"
                                 @click="handleRemove(image, productImages)"
-                                class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600"
+                                class="absolute top-1 sm:top-2 right-1 sm:right-2 bg-red-500 text-white rounded-full w-5 sm:w-6 h-5 sm:h-6 flex items-center justify-center hover:bg-red-600"
                             >
                                 ×
                             </button>
@@ -858,12 +846,12 @@ const getSizeName = (id) => {
                 </div>
 
                 <!-- Submit Button (spanning both columns) -->
-                <div class="col-span-2 flex justify-end">
+                <div class="col-span-1 sm:col-span-2 mt-3 sm:mt-4 flex justify-end">
                     <button
                         type="submit"
-                        class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 font-medium transition-colors"
+                        class="bg-blue-600 text-white px-4 sm:px-6 py-1 sm:py-2 rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 font-medium text-xs sm:text-base transition-colors"
                     >
-                        {{ editMode ? "Update Product" : "Create Product" }}
+                        {{ editMode ? "Editar Producto" : "Crear Producto" }}
                     </button>
                 </div>
             </form>
@@ -879,9 +867,11 @@ const getSizeName = (id) => {
                           selectedProducts.length > 1 ? 's' : ''
                       }`
             "
-            width="30%"
+            :width="isMobile ? '95%' : '30%'"
+            :fullscreen="isMobile"
+            class="custom-dialog"
         >
-            <p class="text-sm text-gray-600 dark:text-gray-400">
+            <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                 ¿Estás seguro de que deseas eliminar
                 {{
                     deleteAllMode
@@ -905,25 +895,25 @@ const getSizeName = (id) => {
         <transition name="fade">
             <div
                 v-if="showSuccessMessage"
-                class="fixed top-4 right-4 bg-green-100 text-green-800 text-sm font-medium px-4 py-2 rounded-md shadow-md"
+                class="fixed top-4 right-4 bg-green-100 text-green-800 text-xs sm:text-sm font-medium px-3 sm:px-4 py-1.5 sm:py-2 rounded-md shadow-md"
             >
                 Productos eliminados correctamente
             </div>
         </transition>
 
         <!-- Main Content -->
-        <div class="mx-auto max-w-screen-xl px-4 lg:px-12">
+        <div class="mx-auto max-w-screen-xl px-2 sm:px-4 lg:px-12">
             <div
                 class="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden"
             >
                 <div
-                    class="flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4"
+                    class="flex flex-col sm:flex-row items-center justify-between space-y-2 sm:space-y-0 sm:space-x-4 p-2 sm:p-4"
                 >
                     <transition name="fade">
                         <button
                             v-if="selectedProducts.length > 0 && showCheckboxes"
                             @click="openDeleteModal"
-                            class="fixed bottom-4 right-4 px-4 py-2 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 focus:outline-none focus:ring-4 focus:ring-red-300 flex items-center space-x-2 z-50"
+                            class="fixed bottom-4 right-4 px-3 sm:px-4 py-1.5 sm:py-2 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 focus:outline-none focus:ring-4 focus:ring-red-300 flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm z-50"
                         >
                             <span
                                 >Eliminar
@@ -934,14 +924,14 @@ const getSizeName = (id) => {
                         </button>
                     </transition>
 
-                    <div class="w-full md:w-1/2">
+                    <div class="w-full sm:w-1/2">
                         <div class="relative w-full">
                             <div
-                                class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
+                                class="absolute inset-y-0 left-0 flex items-center pl-2 sm:pl-3 pointer-events-none"
                             >
                                 <svg
                                     aria-hidden="true"
-                                    class="w-5 h-5 text-gray-500 dark:text-gray-400"
+                                    class="w-4 sm:w-5 h-4 sm:h-5 text-gray-500 dark:text-gray-400"
                                     fill="currentColor"
                                     viewBox="0 0 20 20"
                                     xmlns="http://www.w3.org/2000/svg"
@@ -957,22 +947,22 @@ const getSizeName = (id) => {
                                 type="text"
                                 v-model="searchQuery"
                                 @input="debouncedSearch"
-                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                                class="bg-gray-50 border border-gray-300 text-gray-900 text-xs sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-8 sm:pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                                 placeholder="Buscar por nombre..."
                             />
                         </div>
                     </div>
 
                     <div
-                        class="w-full md:w-auto flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0"
+                        class="w-full sm:w-auto flex flex-col sm:flex-row space-y-2 sm:space-y-0 items-stretch sm:items-center justify-end sm:space-x-3 flex-shrink-0"
                     >
                         <button
                             type="button"
                             @click="openAddModal"
-                            class="flex items-center justify-center text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+                            class="flex items-center justify-center text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
                         >
                             <svg
-                                class="h-3.5 w-3.5 mr-2"
+                                class="h-3 sm:h-3.5 w-3 sm:w-3.5 mr-1 sm:mr-2"
                                 fill="currentColor"
                                 viewBox="0 0 20 20"
                                 xmlns="http://www.w3.org/2000/svg"
@@ -984,19 +974,19 @@ const getSizeName = (id) => {
                                     d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
                                 />
                             </svg>
-                            Add product
+                            Añadir producto
                         </button>
                         <div
-                            class="flex items-center space-x-3 w-full md:w-auto"
+                            class="flex items-center space-x-2 sm:space-x-3 w-full sm:w-auto"
                         >
                             <button
                                 id="actionsDropdownButton"
                                 data-dropdown-toggle="actionsDropdown"
-                                class="w-full md:w-auto flex items-center justify-center py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
+                                class="w-full sm:w-auto flex items-center justify-center py-1.5 sm:py-2 px-3 sm:px-4 text-xs sm:text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
                                 type="button"
                             >
                                 <svg
-                                    class="-ml-1 mr-1.5 w-5 h-5"
+                                    class="-ml-0.5 sm:-ml-1 mr-1 sm:mr-1.5 w-4 sm:w-5 h-4 sm:h-5"
                                     fill="currentColor"
                                     viewBox="0 0 20 20"
                                     xmlns="http://www.w3.org/2000/svg"
@@ -1012,13 +1002,13 @@ const getSizeName = (id) => {
                             </button>
                             <div
                                 id="actionsDropdown"
-                                class="hidden z-10 w-44 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600"
+                                class="hidden z-10 w-36 sm:w-44 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600"
                             >
                                 <div class="py-1">
                                     <a
                                         href="#"
                                         @click.prevent="toggleCheckboxes"
-                                        class="block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white"
+                                        class="block py-2 px-4 text-xs sm:text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white"
                                     >
                                         {{
                                             showCheckboxes
@@ -1029,7 +1019,7 @@ const getSizeName = (id) => {
                                     <a
                                         href="#"
                                         @click.prevent="openDeleteAllModal"
-                                        class="block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white"
+                                        class="block py-2 px-4 text-xs sm:text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white"
                                     >
                                         Eliminar todos
                                     </a>
@@ -1040,7 +1030,7 @@ const getSizeName = (id) => {
                 </div>
                 <div class="overflow-x-auto">
                     <table
-                        class="w-full text-sm text-left text-gray-500 dark:text-gray-400"
+                        class="w-full text-xs sm:text-sm text-left text-gray-500 dark:text-gray-400"
                     >
                         <thead
                             class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400"
@@ -1048,7 +1038,7 @@ const getSizeName = (id) => {
                             <tr>
                                 <th
                                     scope="col"
-                                    class="px-4 py-3"
+                                    class="px-2 sm:px-4 py-2 sm:py-3"
                                     v-if="showCheckboxes"
                                 >
                                     <input
@@ -1058,14 +1048,13 @@ const getSizeName = (id) => {
                                         class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
                                     />
                                 </th>
-                                <th scope="col" class="px-4 py-3">Nombre</th>
-                                <th scope="col" class="px-4 py-3">Categoría</th>
-                                <th scope="col" class="px-4 py-3">Marca</th>
-                                <th scope="col" class="px-4 py-3">Cantidad</th>
-                                <th scope="col" class="px-4 py-3">Precio</th>
-                                <th scope="col" class="px-4 py-3">Stock</th>
-                                <th scope="col" class="px-4 py-3">Publicado</th>
-                                <th scope="col" class="px-4 py-3">
+                                <th scope="col" class="px-2 sm:px-4 py-2 sm:py-3">Nombre</th>
+                                <th scope="col" class="px-2 sm:px-4 py-2 sm:py-3">Categoría</th>
+                                <th scope="col" class="px-2 sm:px-4 py-2 sm:py-3">Marca</th>
+                                <th scope="col" class="px-2 sm:px-4 py-2 sm:py-3">Precio</th>
+                                <th scope="col" class="px-2 sm:px-4 py-2 sm:py-3">Stock</th>
+                                <th scope="col" class="px-2 sm:px-4 py-2 sm:py-3">Publicado</th>
+                                <th scope="col" class="px-2 sm:px-4 py-2 sm:py-3">
                                     <span class="sr-only">Acciones</span>
                                 </th>
                             </tr>
@@ -1076,7 +1065,7 @@ const getSizeName = (id) => {
                                 :key="product.id"
                                 class="border-b dark:border-gray-700"
                             >
-                                <td class="px-4 py-3" v-if="showCheckboxes">
+                                <td class="px-2 sm:px-4 py-2" v-if="showCheckboxes">
                                     <input
                                         type="checkbox"
                                         :value="product.id"
@@ -1086,22 +1075,21 @@ const getSizeName = (id) => {
                                 </td>
                                 <th
                                     scope="row"
-                                    class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white"
+                                    class="px-2 sm:px-4 py-2 font-medium text-gray-900 whitespace-nowrap dark:text-white"
                                 >
                                     {{ product.name }}
                                 </th>
-                                <td class="px-4 py-3">
+                                <td class="px-2 sm:px-4 py-2">
                                     {{ product.category?.name || "N/A" }}
                                 </td>
-                                <td class="px-4 py-3">{{ product.brand }}</td>
-                                <td class="px-4 py-3">{{ product.stock }}</td>
-                                <td class="px-4 py-3">{{ product.price }} €</td>
-                                <td class="px-4 py-3">
+                                <td class="px-2 sm:px-4 py-2">{{ product.brand }}</td>
+                                <td class="px-2 sm:px-4 py-2">{{ product.price }} €</td>
+                                <td class="px-2 sm:px-4 py-2">
                                     <div class="flex flex-wrap gap-1">
                                         <span
                                             v-for="size in product.sizes"
                                             :key="size.id"
-                                            class="text-xs px-2 py-1 bg-gray-100 rounded"
+                                            class="text-xs px-1 sm:px-2 py-1 bg-gray-100 rounded"
                                         >
                                             {{ size.name }}:
                                             {{ size.pivot.stock }}
@@ -1109,14 +1097,14 @@ const getSizeName = (id) => {
                                     </div>
                                 </td>
 
-                                <td class="px-4 py-3">
+                                <td class="px-2 sm:px-4 py-2">
                                     <button
                                         @click="togglePublish(product.id)"
                                         type="button"
                                         :class="{
-                                            'px-3 py-2 text-xs font-medium text-center text-white bg-green-700 rounded-lg hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800':
+                                            'px-2 sm:px-3 py-1 sm:py-2 text-xs font-medium text-center text-white bg-green-700 rounded-lg hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800':
                                                 product.published,
-                                            'px-3 py-2 text-xs font-medium text-center text-white bg-red-700 rounded-lg hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800':
+                                            'px-2 sm:px-3 py-1 sm:py-2 text-xs font-medium text-center text-white bg-red-700 rounded-lg hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800':
                                                 !product.published,
                                         }"
                                     >
@@ -1128,16 +1116,16 @@ const getSizeName = (id) => {
                                     </button>
                                 </td>
                                 <td
-                                    class="px-4 py-3 flex items-center justify-end relative"
+                                    class="px-2 sm:px-4 py-2 flex items-center justify-end relative"
                                 >
                                     <button
                                         :id="`action-button-${product.id}`"
-                                        class="flex items-center justify-center w-8 h-8 text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-100 rounded-full hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200 focus:outline-none"
+                                        class="flex items-center justify-center w-7 sm:w-8 h-7 sm:h-8 text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-100 rounded-full hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200 focus:outline-none"
                                         @click.stop="toggleDropdown(product.id)"
                                         type="button"
                                     >
                                         <svg
-                                            class="w-5 h-5"
+                                            class="w-4 sm:w-5 h-4 sm:h-5"
                                             fill="none"
                                             stroke="currentColor"
                                             viewBox="0 0 24 24"
@@ -1154,20 +1142,20 @@ const getSizeName = (id) => {
 
                                     <div
                                         :id="`dropdown-${product.id}`"
-                                        class="dropdown-menu absolute right-0 top-10 z-10 w-40 bg-white rounded-xl shadow-lg dark:bg-gray-800 dark:shadow-gray-900 overflow-hidden"
+                                        class="dropdown-menu absolute right-0 top-8 sm:top-10 z-10 w-32 sm:w-40 bg-white rounded-xl shadow-lg dark:bg-gray-800 dark:shadow-gray-900 overflow-hidden"
                                         :class="{
                                             hidden:
                                                 activeDropdown !== product.id,
                                         }"
                                     >
-                                        <ul class="text-sm">
+                                        <ul class="text-xs sm:text-sm">
                                             <li>
                                                 <a
                                                     href="#"
                                                     @click.prevent="
                                                         openEditModal(product)
                                                     "
-                                                    class="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 dark:text-gray-200 dark:hover:bg-gray-700 dark:hover:text-blue-400 transition-colors duration-150"
+                                                    class="block px-3 sm:px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 dark:text-gray-200 dark:hover:bg-gray-700 dark:hover:text-blue-400 transition-colors duration-150"
                                                 >
                                                     Editar
                                                 </a>
@@ -1180,7 +1168,7 @@ const getSizeName = (id) => {
                                                             product.id
                                                         )
                                                     "
-                                                    class="block px-4 py-2 text-gray-700 hover:bg-red-50 hover:text-red-600 dark:text-gray-200 dark:hover:bg-gray-700 dark:hover:text-red-400 transition-colors duration-150"
+                                                    class="block px-3 sm:px-4 py-2 text-gray-700 hover:bg-red-50 hover:text-red-600 dark:text-gray-200 dark:hover:bg-gray-700 dark:hover:text-red-400 transition-colors duration-150"
                                                 >
                                                     Eliminar
                                                 </a>
@@ -1193,11 +1181,11 @@ const getSizeName = (id) => {
                     </table>
                 </div>
                 <nav
-                    class="flex flex-col md:flex-row justify-between items-start md:items-center space-y-3 md:space-y-0 p-4"
+                    class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-2 sm:space-y-0 p-2 sm:p-4"
                     aria-label="Navegación de tabla"
                 >
                     <span
-                        class="text-sm font-normal text-gray-500 dark:text-gray-400"
+                        class="text-xs sm:text-sm font-normal text-gray-500 dark:text-gray-400"
                     >
                         Mostrando
                         <span
@@ -1215,11 +1203,11 @@ const getSizeName = (id) => {
                             <button
                                 @click="previousPage"
                                 :disabled="currentPage === 1"
-                                class="flex items-center justify-center h-full py-1.5 px-3 ml-0 text-gray-500 bg-white rounded-l-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white disabled:opacity-50"
+                                class="flex items-center justify-center h-full py-1 px-2 sm:px-3 ml-0 text-gray-500 bg-white rounded-l-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white disabled:opacity-50 text-xs sm:text-sm"
                             >
                                 <span class="sr-only">Anterior</span>
                                 <svg
-                                    class="w-5 h-5"
+                                    class="w-4 sm:w-5 h-4 sm:h-5"
                                     aria-hidden="true"
                                     fill="currentColor"
                                     viewBox="0 0 20 20"
@@ -1237,7 +1225,7 @@ const getSizeName = (id) => {
                             <button
                                 @click="goToPage(page)"
                                 :class="{
-                                    'flex items-center justify-center text-sm py-2 px-3 leading-tight': true,
+                                    'flex items-center justify-center text-xs sm:text-sm py-1.5 px-2 sm:px-3 leading-tight': true,
                                     'text-primary-600 bg-primary-50 border border-primary-300 hover:bg-primary-100 hover:text-primary-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white':
                                         currentPage === page,
                                     'text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white':
@@ -1251,11 +1239,11 @@ const getSizeName = (id) => {
                             <button
                                 @click="nextPage"
                                 :disabled="currentPage === lastPage"
-                                class="flex items-center justify-center h-full py-1.5 px-3 leading-tight text-gray-500 bg-white rounded-r-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white disabled:opacity-50"
+                                class="flex items-center justify-center h-full py-1 px-2 sm:px-3 leading-tight text-gray-500 bg-white rounded-r-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white disabled:opacity-50 text-xs sm:text-sm"
                             >
                                 <span class="sr-only">Siguiente</span>
                                 <svg
-                                    class="w-5 h-5"
+                                    class="w-4 sm:w-5 h-4 sm:h-5"
                                     aria-hidden="true"
                                     fill="currentColor"
                                     viewBox="0 0 20 20"
@@ -1298,5 +1286,28 @@ const getSizeName = (id) => {
 /* Transiciones suaves para el fondo y texto */
 .transition-colors {
     transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+@media (max-width: 640px) {
+    .col-span-1 {
+        grid-column: span 1;
+    }
+    .col-span-2 {
+        grid-column: span 1;
+    }
+}
+
+/* Ajustes para el diálogo en móviles */
+.custom-dialog :deep(.el-dialog__body) {
+    padding: 10px 15px !important;
+}
+
+@media (max-width: 640px) {
+    .custom-dialog :deep(.el-dialog__header) {
+        padding: 10px 15px !important;
+    }
+    .custom-dialog :deep(.el-dialog__footer) {
+        padding: 10px 15px !important;
+    }
 }
 </style>

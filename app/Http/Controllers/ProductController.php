@@ -44,18 +44,10 @@ class ProductController extends Controller
         // Solo productos publicados
         $query = Product::where('published', true);
 
-        // Filtros (mantén tu lógica actual)
-        if ($request->has('genders') && !empty($request->genders)) {
-            $query->whereIn('gender', explode(',', $request->genders));
-        }
-
-        // ... (si tienes más filtros, mantenlos aquí)
-
         $products = $query->get();
 
         return Inertia::render('Products/Index', [
             'products' => $products,
-            'filters' => $request->only(['genders', 'categories', 'min_price', 'max_price', 'sort'])
         ]);
     }
 
