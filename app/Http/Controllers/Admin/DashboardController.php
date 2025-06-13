@@ -27,30 +27,31 @@ class DashboardController extends Controller
 
     protected function getSalesByDay()
     {
-        $sales = Order::selectRaw('DAYNAME(created_at) as day, COUNT(*) as count, SUM(total) as total')
-            ->where('status', 'completed')
-            ->where('created_at', '>=', now()->subDays(7))
-            ->groupBy('day')
-            ->orderByRaw("FIELD(DAYNAME(created_at), 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')")
-            ->get()
-            ->map(function ($item) {
-                $diasTraducidos = [
-                    'Monday' => 'Lunes',
-                    'Tuesday' => 'Martes',
-                    'Wednesday' => 'Miércoles',
-                    'Thursday' => 'Jueves',
-                    'Friday' => 'Viernes',
-                    'Saturday' => 'Sábado',
-                    'Sunday' => 'Domingo',
-                ];
+$sales = Order::selectRaw('DAYNAME(created_at) as day, COUNT(*) as count, SUM(total) as total')
+    ->where('status', 'completed')
+    ->where('created_at', '>=', now()->subDays(7))
+    ->groupBy('day')
+    ->orderByRaw("FIELD(day, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')")
+    ->get()
+    ->map(function ($item) {
+        $diasTraducidos = [
+            'Monday' => 'Lunes',
+            'Tuesday' => 'Martes',
+            'Wednesday' => 'Miércoles',
+            'Thursday' => 'Jueves',
+            'Friday' => 'Viernes',
+            'Saturday' => 'Sábado',
+            'Sunday' => 'Domingo',
+        ];
 
-                return [
-                    'day' => $diasTraducidos[$item->day] ?? $item->day,
-                    'count' => $item->count,
-                    'total' => $item->total,
-                ];
-            })
-            ->toArray();
+        return [
+            'day' => $diasTraducidos[$item->day] ?? $item->day,
+            'count' => $item->count,
+            'total' => $item->total,
+        ];
+    })
+    ->toArray();
+
 
         return $sales;
     }

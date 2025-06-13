@@ -1082,12 +1082,12 @@
                                 <Link
                                     :href="
                                         route('categories.show', {
-                                            category: 'zapatillas',
+                                            category: 'camisetas',
                                         })
                                     "
                                     class="inline-flex items-center px-8 py-4 border-2 border-indigo-600 text-indigo-600 font-bold rounded-xl hover:bg-indigo-50 transform hover:scale-105 transition-all duration-300 shadow-sm hover:shadow-md"
                                 >
-                                    <span>Eleva tu pisada</span>
+                                    <span>Renueva tu estilo</span>
                                 </Link>
                             </div>
                             <div class="mt-8 flex items-center space-x-4">
