@@ -194,7 +194,7 @@
                             <p class="text-sm text-gray-600">
                                 Vendido y enviado por
                                 <span class="font-semibold">{{
-                                    product.seller || "Spiritier"
+                                    product.seller || "TrendClothes"
                                 }}</span>
                             </p>
                             <p class="text-sm text-gray-600 mt-1">
